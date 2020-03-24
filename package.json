@@ -1,0 +1,29 @@
+{
+  "name": "wordswithfriendshelper",
+  "version": "1.0.0",
+  "description": "Input your current game board, and letters, and this tool will provide you with the best possible move!",
+  "main": "./dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elijahsawyers/WordsWithFriendsHelper"
+  },
+  "author": "Elijah Sawyers",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/elijahsawyers/WordsWithFriendsHelper/issues"
+  },
+  "homepage": "https://github.com/elijahsawyers/WordsWithFriendsHelper#readme",
+  "devDependencies": {
+    "browserify": "^16.5.0",
+    "gulp": "^4.0.0",
+    "gulp-connect": "^5.7.0",
+    "gulp-typescript": "^5.0.1",
+    "tsify": "^4.0.1",
+    "typescript": "^3.6.4",
+    "vinyl-source-stream": "^2.0.0",
+    "watchify": "^3.11.1"
+  }
+}

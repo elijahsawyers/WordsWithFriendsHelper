@@ -1,0 +1,16 @@
+{
+  "include": [
+      "./src/scripts"
+  ],
+  "exclude": [
+      "./node_modules"
+  ],
+  "compilerOptions": {
+      "noImplicitAny": true,
+      "strictNullChecks": true,
+      "moduleResolution": "node",
+      "target": "es6",
+      "outDir": "./dist",
+      "rootDir": "./src"
+  }
+}

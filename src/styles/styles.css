@@ -1,0 +1,80 @@
+/*
+  Author: Elijah Sawyers
+  Email: elijahsawyers@gmail.com
+  Colors: 
+    1. Greys: #EEE
+    2. Blues: #40c4ff
+  Table of Contents:
+  ====================================================================================================
+    1. General Styles.
+    2. Container.
+    3. Game Board.
+    4. Game Board Cell.
+*/
+
+/*====================================================================================================
+1. General Styles.
+====================================================================================================*/
+
+body {
+  background-color:#ffffe3;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar { 
+display: none; 
+}
+
+/*====================================================================================================
+2. Container.
+====================================================================================================*/
+#container {
+  height: 100vh;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+/*====================================================================================================
+3. Game Board.
+====================================================================================================*/
+#game-board {
+  margin: 0 auto;
+  background: #a2b4c2;
+}
+
+/*====================================================================================================
+4. Game Board Cell.
+====================================================================================================*/
+.game-board-cell {
+  width: 40px;
+  height: 40px;
+  background: #dedede;
+  border: 3px solid #c9d3dc;
+  border-radius: 10px;
+  margin: 0.5px;
+  line-height: 35px;
+  color: #fff;
+  text-align: center;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.start-cell {
+  background: #64284b;
+}
+
+.double-letter {
+  background: #3c82be;
+}
+
+.triple-letter {
+  background: #7da662;
+}
+
+.double-word {
+  background: #a04b3c;
+}
+
+.triple-word {
+  background: #d79650;
+}
