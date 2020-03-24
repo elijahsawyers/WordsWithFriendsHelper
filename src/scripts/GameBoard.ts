@@ -10,6 +10,6 @@ export default class GameBoard {
   static width = 15;
   #cells: Array<Cell>;
 
-  /** TODO */
+  /** */
   constructor() {}
 }
