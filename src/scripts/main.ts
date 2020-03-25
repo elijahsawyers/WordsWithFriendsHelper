@@ -6,6 +6,8 @@ import GameBoard from './GameBoard';
 import User from './User';
 
 (function main(): void {
+  const table = document.getElementById('game-board') as HTMLElement;
+
   const user = new User();
-  const gameBoard = new GameBoard(user);
+  new GameBoard(table, user);
 })();

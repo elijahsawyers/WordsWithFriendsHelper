@@ -2,8 +2,12 @@
  * @author Elijah Sawyers <elijahsawyers@gmail.com>
  */
 
+interface LetterValueObject {
+  [key: string]: number;
+}
+
 /** All letter point values. */
-export const LetterValues = {
+export const LetterValues: LetterValueObject = {
   'A': 1,
   'B': 4,
   'C': 4,

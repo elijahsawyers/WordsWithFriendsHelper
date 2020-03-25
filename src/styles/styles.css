@@ -51,7 +51,7 @@ display: none;
 4. Game Board Cell.
 ====================================================================================================*/
 .game-board-cell {
-  display: relative;
+  position: relative;
   width: 40px;
   height: 40px;
   background: #dedede;
@@ -66,7 +66,7 @@ display: none;
 }
 
 .selected-cell {
-  border: 3px solid #F24C3A;
+  border: 3px solid #F24C3A !important;
 }
 
 .start-cell {
