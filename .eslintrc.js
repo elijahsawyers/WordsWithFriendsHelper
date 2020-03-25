@@ -4,7 +4,9 @@ module.exports = {
     'es6': true,
   },
   'extends': [
-    'google',
+    'eslint:recommended',
+    'plugin:@typescript-eslint/eslint-recommended',
+    'plugin:@typescript-eslint/recommended',
   ],
   'globals': {
     'Atomics': 'readonly',

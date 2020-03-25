@@ -10,6 +10,7 @@
     2. Container.
     3. Game Board.
     4. Game Board Cell.
+    5. Letter.
 */
 
 /*====================================================================================================
@@ -23,6 +24,10 @@ body {
 
 ::-webkit-scrollbar { 
 display: none; 
+}
+
+.hidden {
+  display: none;
 }
 
 /*====================================================================================================
@@ -46,6 +51,7 @@ display: none;
 4. Game Board Cell.
 ====================================================================================================*/
 .game-board-cell {
+  display: relative;
   width: 40px;
   height: 40px;
   background: #dedede;
@@ -57,6 +63,10 @@ display: none;
   text-align: center;
   font-weight: bold;
   cursor: pointer;
+}
+
+.selected-cell {
+  border: 3px solid #F24C3A;
 }
 
 .start-cell {
@@ -77,4 +87,20 @@ display: none;
 
 .triple-word {
   background: #d79650;
+}
+
+/*====================================================================================================
+5. Letter.
+====================================================================================================*/
+.letter {
+  background: #F0D755;
+  font-size: 25px;
+  border: 3px solid #DCC653;
+}
+
+.letter-point-value {
+  font-size: 10px;
+  position: absolute;
+  top: -10px;
+  right: 2px;
 }
