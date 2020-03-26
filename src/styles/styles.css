@@ -1,8 +1,6 @@
 /*
   Author: Elijah Sawyers
   Email: elijahsawyers@gmail.com
-  Colors: 
-    1. Greys: 
   Table of Contents:
   ====================================================================================================
     1. General Styles.
@@ -13,6 +11,7 @@
     6. Game Board Cell.
     7. Letter.
     8. Instructions.
+    9. Letter Dock.
 */
 
 /*====================================================================================================
@@ -43,6 +42,13 @@ display: none;
 #logo {
   display: block;
   max-width: 300px;
+}
+
+#logo-text {
+  margin: 0;
+  font-weight: bold;
+  font-family: Caveat;
+  margin-top: 8px;
 }
 
 /*====================================================================================================
@@ -104,6 +110,10 @@ display: none;
   background: #64284b;
 }
 
+#star {
+  pointer-events: none;
+}
+
 .double-letter {
   background: #3c82be;
 }
@@ -130,6 +140,7 @@ display: none;
 }
 
 .letter-point-value {
+  pointer-events: none;
   font-size: 10px;
   position: absolute;
   top: -10px;
@@ -175,7 +186,20 @@ display: none;
   height: 75px;
   width: 75px;
   border-radius: 10px;
-  display: flex;
+  cursor: pointer;
+  color: #fff;
+  font-size: 48px;
+  position: relative;
+  font-weight: bold;
+  text-align: center;
+}
+
+.user-letter-point-value {
+  pointer-events: none;
+  font-size: 16px;
+  position: absolute;
+  top: 0px;
+  right: 5px;
 }
 
 #go {

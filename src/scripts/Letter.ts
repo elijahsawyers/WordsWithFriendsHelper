@@ -2,6 +2,7 @@
  * @author Elijah Sawyers <elijahsawyers@gmail.com>
  */
 
+/** Interface for letter values object. */
 interface LetterValueObject {
   [key: string]: number;
 }
@@ -34,9 +35,10 @@ export const LetterValues: LetterValueObject = {
   'X': 8,
   'Y': 3,
   'Z': 10,
-  'BLANK': 0,
+  '?': 0,
 };
 
+/** Represents a letter in a game board cell. */
 export interface Letter {
   letter: string;
   value: number;

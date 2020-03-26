@@ -12,28 +12,23 @@ export enum BonusCell {
   tripleWord,
 }
 
-/** Represents a cell in the game board. */
-export default class Cell {
+/** Represents the base cell class. */
+export class Cell {
   #selected = false;
   _cell: HTMLElement;
-  _bonusCell: BonusCell|null;
   _letter: Letter|null;
 
   /**
-   * Construct a new cell with a bonus cell and letter type.
+   * Construct a new cell with the HTMLElement of the cell and a letter type.
    *
    * @param {HTMLElement} cell the HTMLElement of the cell.
-   * @param {BonusCell|null} bonusCell whether or not this is a bonus cell,
-   * and if so, what type. (default is null).
-   * @param {Letter|null} 
+   * @param {Letter|null} letter the letter the cell holds.
    */
   constructor(
     cell: HTMLElement,
-    bonusCell: BonusCell|null = null,
     letter: Letter|null = null,
   ) {
     this._cell = cell;
-    this._bonusCell = bonusCell;
     this._letter = letter;
   }
 
@@ -63,7 +58,65 @@ export default class Cell {
       else if (this._cell.classList.contains('triple-letter')) this._cell.innerHTML = 'TL';
       else if (this._cell.classList.contains('double-word')) this._cell.innerHTML = 'DW';
       else if (this._cell.classList.contains('triple-word')) this._cell.innerHTML = 'TW';
-      else if (this._cell.classList.contains('start-cell')) this._cell.innerHTML = '<i class="fas fa-star"></i>';
+      else if (this._cell.classList.contains('start-cell')) this._cell.innerHTML = '<i id="star" class="fas fa-star"></i>';
+      else this._cell.innerHTML = '';
+
+    } else {
+      this._cell.classList.add('letter');
+
+      this._cell.innerHTML =
+          `${newLetter.letter}<span class="letter-point-value">${newLetter.value}</span>`;
+    }
+  }
+
+  /** 
+   * Toggles whether or not the cell is in selected mode (i.e. adds/removes a red border).
+   */
+  toggleSelected(): void {
+    this.#selected = !this.#selected;
+
+    if (this.#selected) {
+      this._cell.classList.add('selected-cell')
+    } else {
+      this._cell.classList.remove('selected-cell')
+    }
+  }
+}
+
+/** Represents a cell in the game board. */
+export class GameBoardCell extends Cell {
+  _bonusCell: BonusCell|null;
+
+  /**
+   * Construct a new cell with the HTMLElement of the cell and a letter type, as well
+   * as a bonus cell type.
+   *
+   * @param {HTMLElement} cell the HTMLElement of the cell.
+   * @param {BonusCell|null} bonusCell whether or not this is a bonus cell,
+   * and if so, what type. (default is null).
+   * @param {Letter|null} letter the letter the cell holds.
+   */
+  constructor(
+    cell: HTMLElement,
+    bonusCell: BonusCell|null = null,
+    letter: Letter|null = null,
+  ) {
+    super(cell, letter);
+    this._bonusCell = bonusCell;
+  }
+
+  /** Override the setter for the current letter of the cell. */
+  set letter(newLetter: Letter|null) {
+    this._letter = newLetter;
+
+    if (newLetter == null) {
+      this._cell.classList.remove('letter');
+
+      if (this._cell.classList.contains('double-letter')) this._cell.innerHTML = 'DL';
+      else if (this._cell.classList.contains('triple-letter')) this._cell.innerHTML = 'TL';
+      else if (this._cell.classList.contains('double-word')) this._cell.innerHTML = 'DW';
+      else if (this._cell.classList.contains('triple-word')) this._cell.innerHTML = 'TW';
+      else if (this._cell.classList.contains('start-cell')) this._cell.innerHTML = '<i id="star" class="fas fa-star"></i>';
       else this._cell.innerHTML = '';
 
     } else {
@@ -83,17 +136,18 @@ export default class Cell {
   set bonusCell(newBonusCell: BonusCell|null) {
     throw Error('Cannot change the bonus cell type!');
   }
+}
 
-  /** 
-   * Toggles whether or not the cell is in selected mode (i.e. adds/removes a red border).
-   */
-  toggleSelected(): void {
-    this.#selected = !this.#selected;
+/** Represents a cell in the game board. */
+export class UserCell extends Cell {
+  /** Override the setter for the current letter of the cell. */
+  set letter(newLetter: Letter|null) {
+    this._letter = newLetter;
 
-    if (this.#selected) {
-      this._cell.classList.add('selected-cell')
+    if (newLetter == null) {
+      this._cell.innerHTML = '';
     } else {
-      this._cell.classList.remove('selected-cell')
+      this._cell.innerHTML = `${newLetter.letter}<span class="user-letter-point-value">${newLetter.value}</span>`;
     }
   }
 }
