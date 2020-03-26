@@ -63,6 +63,7 @@ export default class Cell {
       else if (this._cell.classList.contains('triple-letter')) this._cell.innerHTML = 'TL';
       else if (this._cell.classList.contains('double-word')) this._cell.innerHTML = 'DW';
       else if (this._cell.classList.contains('triple-word')) this._cell.innerHTML = 'TW';
+      else if (this._cell.classList.contains('start-cell')) this._cell.innerHTML = '<i class="fas fa-star"></i>';
       else this._cell.innerHTML = '';
 
     } else {
