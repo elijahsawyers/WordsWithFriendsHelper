@@ -50,23 +50,6 @@ export class Cell {
   /** Setter for the current letter of the cell. */
   set letter(newLetter: Letter|null) {
     this._letter = newLetter;
-
-    if (newLetter == null) {
-      this._cell.classList.remove('letter');
-
-      if (this._cell.classList.contains('double-letter')) this._cell.innerHTML = 'DL';
-      else if (this._cell.classList.contains('triple-letter')) this._cell.innerHTML = 'TL';
-      else if (this._cell.classList.contains('double-word')) this._cell.innerHTML = 'DW';
-      else if (this._cell.classList.contains('triple-word')) this._cell.innerHTML = 'TW';
-      else if (this._cell.classList.contains('start-cell')) this._cell.innerHTML = '<i id="star" class="fas fa-star"></i>';
-      else this._cell.innerHTML = '';
-
-    } else {
-      this._cell.classList.add('letter');
-
-      this._cell.innerHTML =
-          `${newLetter.letter}<span class="letter-point-value">${newLetter.value}</span>`;
-    }
   }
 
   /** 
@@ -105,6 +88,11 @@ export class GameBoardCell extends Cell {
     this._bonusCell = bonusCell;
   }
 
+  /** Must override the getter if the setter is overridden, per the spec. */
+  get letter(): Letter|null {
+    return this._letter;
+  }
+
   /** Override the setter for the current letter of the cell. */
   set letter(newLetter: Letter|null) {
     this._letter = newLetter;
@@ -140,6 +128,11 @@ export class GameBoardCell extends Cell {
 
 /** Represents a cell in the game board. */
 export class UserCell extends Cell {
+  /** Must override the getter if the setter is overridden, per the spec. */
+  get letter(): Letter|null {
+    return this._letter;
+  }
+
   /** Override the setter for the current letter of the cell. */
   set letter(newLetter: Letter|null) {
     this._letter = newLetter;

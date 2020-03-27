@@ -134,8 +134,39 @@ export default class GameBoard {
    * and displays the result on the gameboard with letters with a purple border.
    */
   private computeBestMove(): void {
+    // Construct the post data - game points and user letters.
+    interface GameLetter {
+      letter: string|undefined;
+      index: number;
+    }
+
+    const postData = {
+      gameLetters: [] as Array<GameLetter>,
+      userLetters: [] as Array<string|undefined>
+    };
+
+    for (let i = 0; i < this.#cells.length; i++) {
+      if (this.#cells[i].letter != null) {
+        postData.gameLetters.push({
+          letter: this.#cells[i].letter?.letter,
+          index: i
+        });
+      }
+    }
+
+    for (let i = 0; i < this.#userLetters.length; i++) {
+      postData.userLetters.push(this.#userLetters[i].letter?.letter);
+    }
+
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://localhost:5000/bestGameMove', /* async = */ false);
-    xhr.send(JSON.stringify({'test': 'test'}));
+    xhr.onreadystatechange = function(): void {
+      if (this.readyState == 4 && this.status == 200) {
+        const bestMove = JSON.parse(xhr.responseText);
+        console.log(bestMove);
+      }
+    }
+    xhr.open('POST', '/bestGameMove');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify(postData));
   }
 }
