@@ -71,6 +71,7 @@ export default class GameBoard {
   private onClick(e: MouseEvent): void {
     const target = e.target as HTMLElement;
 
+    // Handle cell clicks.
     if (target.classList.contains('game-board-cell') || target.classList.contains('user-letter')) {
       let clickedCell;
 
@@ -98,6 +99,11 @@ export default class GameBoard {
         this.#currentSelectedCell.toggleSelected();
       }
     }
+
+    // Handle click's on the "go" button.
+    if (target.id == 'go') {
+      this.computeBestMove();
+    }
   }
 
   /**
@@ -121,5 +127,15 @@ export default class GameBoard {
       this.#currentSelectedCell.toggleSelected();
       this.#currentSelectedCell = null;
     }
+  }
+
+  /**
+   * Computes the best possible move, given the game board and user's letter,
+   * and displays the result on the gameboard with letters with a purple border.
+   */
+  private computeBestMove(): void {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://localhost:5000/bestGameMove', /* async = */ false);
+    xhr.send(JSON.stringify({'test': 'test'}));
   }
 }

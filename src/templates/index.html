@@ -24,15 +24,15 @@
     <link href="https://fonts.googleapis.com/css?family=Caveat&display=swap" rel="stylesheet">
 
     <!-- Local styles and scripts -->
-    <link rel="stylesheet" href="styles/styles.css">
-    <script type="module" src="bundle.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+    <script type="module" src="{{ url_for('static', filename='scripts/bundle.js') }}"></script>
 </head>
 
 <body>
     <!-- Container -->
     <div id="container" class="container-fluid">
       <div id="top-row" class="row">
-        <img id="logo" src="./assets/logo.png">
+        <img id="logo" src="{{ url_for('static', filename='assets/logo.png') }}">
         <h1 id="logo-text" class="text-white">Helper!</h1>
       </div>
 

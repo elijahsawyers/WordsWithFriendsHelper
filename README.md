@@ -14,35 +14,11 @@ Tired of losing at Words with Friends? Me too! This tool will allow you to final
 
 ## Getting started
 
-Clone the repository:
-```sh
-git clone https://github.com/elijahsawyers/WordsWithFriendsHelper.git
-```
-
-Install all dependencies:
-```sh
-npm install
-```
-
-## Setup
-
-Build the project:
-```sh
-gulp build
-```
+TODO
 
 ## Running the app
 
-To run the server:
-```sh
-gulp connect
-```
-
-During development, it's best to use the default gulp task because it listens for changes to src files and updates the distribution accordingly:
-
-```sh
-gulp
-```
+TODO
 
 ## Demo 
 
