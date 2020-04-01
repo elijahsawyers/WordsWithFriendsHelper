@@ -248,11 +248,15 @@ def compute_anchors(game_board):
 
     return anchors
 
-def intersection(list1, list2):
+def extend_right(partial_word, node, square):
     '''
     TODO
     '''
-    return [value for value in list1 if value in list2]
+
+def left_part(partial_word, node, limit):
+    '''
+    TODO
+    '''
 
 if __name__ == '__main__':
     RACK = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
@@ -262,9 +266,9 @@ if __name__ == '__main__':
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', 'S', 'T', 'A', 'R', 'S', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'A', 'P', 'P', 'L', 'E', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'T', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
@@ -279,127 +283,10 @@ if __name__ == '__main__':
 
     # Compute the highest scoring across word.
     best_across_word = {
-        'anchor': [-1, -1],
+        'start': [-1, -1],
+        'end': [-1, -1],
         'word': '',
         'score': 0
     }
 
-    def extend_right(anchor, rack, left_part, index):
-        '''
-        TODO
-        '''
-        i, j = index
-
-        # Base case - can't extend further right.
-        if j > 14 or len(rack) == 0:
-            return
-
-        # Case 1: empty cell.
-        if GAME_BOARD[i][j] == ' ':
-            common_letters = intersection(rack, across_cross_checks[i][j])
-
-            # Can't extend further right.
-            if not common_letters:
-                return
-            
-            for letter in common_letters:
-                if (
-                    (left_part + letter).lower() in DICTIONARY and
-                    score_word(left_part + letter) > best_across_word['score']
-                ):
-                    best_across_word['anchor'] = anchor
-                    best_across_word['word'] = left_part + letter
-                    best_across_word['score'] = score_word(left_part + letter)
-                
-                extend_right(
-                    anchor,
-                    list(filter(lambda l: l != letter, rack)),
-                    left_part + letter,
-                    [i, j + 1]
-                )
-        # Case 2: cell occupied.
-        else:
-            if (
-                (left_part + GAME_BOARD[i][j]).lower() in DICTIONARY and
-                score_word(left_part + GAME_BOARD[i][j]) > best_across_word['score']
-            ):
-                best_across_word['anchor'] = anchor
-                best_across_word['word'] = left_part + GAME_BOARD[i][j]
-                best_across_word['score'] = score_word(left_part + GAME_BOARD[i][j])
-            extend_right(
-                anchor,
-                rack,
-                left_part + GAME_BOARD[i][j],
-                [i, j + 1]
-            )
     
-    def extend_left(anchor, rack, index, left_part):
-        '''
-        TODO
-        '''
-
-        i, j = index
-        
-        # Can't extend further left.
-        if j < 0 or len(rack) == 0:
-            return
-
-        if GAME_BOARD[i][j] == ' ':
-            common_letters = intersection(rack, across_cross_checks[i][j])
-
-            # Can't extend further left.
-            if not common_letters:
-                return
-
-            for letter in common_letters:
-                extend_right(
-                    anchor,
-                    list(filter(lambda l: l != letter, rack)),
-                    letter + left_part,
-                    anchor
-                )
-
-                extend_left(
-                    anchor,
-                    list(filter(lambda l: l != letter, rack)),
-                    [i, j - 1],
-                    letter + left_part
-                )
-        # Can't extend further left.
-        else:
-            return
-
-    # Moves can only be made off of anchors.
-    for i in range(15):
-        for j in range(15):
-            if anchors[i][j] and across_cross_checks[i][j]: # Current anchor.
-                # Case 1: The tile to the left of the anchor is empty.
-                if j != 0 and GAME_BOARD[i][j - 1] == ' ':
-                    extend_left(
-                        [i, j],
-                        RACK,
-                        [i, j - 1],
-                        ''
-                    )
-                # Case 2: The tile to the left of the anchor is occupied or off
-                # the edge of the game board.
-                else:
-                    # Compute the "left part" of the word - continuous letters already
-                    # in play on the board.
-                    left_part = ''
-                    k = j - 1
-                    while k > -1 and GAME_BOARD[i][k] != ' ':
-                        left_part += GAME_BOARD[i][k]
-                        k -= 1
-
-                    # With the given left part, extend right, searching for valid words.
-                    extend_right([i, j], RACK, left_part, [i, j])
-
-    print(best_across_word)
-
-    # Compute the highest scoring down word.
-    best_down_word = {
-        'anchor': [-1, -1],
-        'word': '',
-        'score': 0
-    }
