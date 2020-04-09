@@ -241,23 +241,23 @@ def intersection(lst1, lst2):
     return [value for value in lst1 if value in lst2]
 
 if __name__ == '__main__':
-    RACK = ['E', 'O', 'R', 'S', 'L', 'I', 'B']
+    RACK = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
     GAME_BOARD = [
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'B'],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'U'],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'V', 'A', 'U', 'L', 'T', 'Y'],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'T', 'E', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'Z', 'A', 'X', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'A', 'N', 'I', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', 'B', 'E', 'E', 'P', 'S', ' ', 'L', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', 'U', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        ['M', 'A', 'I', 'R', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        ['A', 'W', ' ', 'N', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', 'E', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', 'R', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
     ]
     anchors = compute_anchors(GAME_BOARD)
     across_cross_checks = compute_across_cross_checks(GAME_BOARD)
@@ -370,8 +370,12 @@ if __name__ == '__main__':
         i, j = index
 
         # Base Case - no common letters or out of the gameboard bounds.
-        if j > 14 or not intersection(rack, across_cross_checks[i][j]):
+        if j > 14 or (GAME_BOARD[i][j] == ' ' and not intersection(rack, across_cross_checks[i][j])):
             return
+        
+        if i == 3 and j == 13:
+            print(current_word, rack)
+            print(intersection(rack, across_cross_checks[i][j]))
 
         # For the current coordinate, find common letters between the rack and cross checks.
         common_letters = intersection(rack, across_cross_checks[i][j])
@@ -380,15 +384,16 @@ if __name__ == '__main__':
         if GAME_BOARD[i][j] == ' ':
             for letter in common_letters:
                 # Score the current word, if it's in the dictionary.
-                if (current_word + letter).lower() in DICTIONARY and j + 1 < 15 and GAME_BOARD[i][j + 1] == ' ':
-                    word = current_word + letter
-                    score = score_word_across(word, [i, j], rack_played_incides + [[i, j]])
+                if (current_word + letter).lower() in DICTIONARY:
+                    if (j + 1 < 15 and GAME_BOARD[i][j + 1] == ' ') or j == 14:
+                        word = current_word + letter
+                        score = score_word_across(word, [i, j], rack_played_incides + [[i, j]])
 
-                    # Update the best across word, if the score of the current word is better.
-                    if score > best_across_word['score']:
-                        best_across_word['last_letter_index'] = [i, j]
-                        best_across_word['word'] = word
-                        best_across_word['score'] = score
+                        # Update the best across word, if the score of the current word is better.
+                        if score > best_across_word['score']:
+                            best_across_word['last_letter_index'] = [i, j]
+                            best_across_word['word'] = word
+                            best_across_word['score'] = score
                 
                 # Keep extending right to form words.
                 extend_right(
@@ -402,14 +407,15 @@ if __name__ == '__main__':
         else:
             # Score the current word, if it's in the dictionary.
             if (current_word + GAME_BOARD[i][j]).lower() in DICTIONARY:
-                word = current_word + GAME_BOARD[i][j]
-                score = score_word_across(word, [i, j], rack_played_incides)
+                if (j + 1 < 15 and GAME_BOARD[i][j + 1] == ' ') or j == 14:
+                    word = current_word + GAME_BOARD[i][j]
+                    score = score_word_across(word, [i, j], rack_played_incides)
 
-                # Update the best across word, if the score of the current word is better.
-                if score > best_across_word['score']:
-                    best_across_word['last_letter_index'] = [i, j]
-                    best_across_word['word'] = word
-                    best_across_word['score'] = score
+                    # Update the best across word, if the score of the current word is better.
+                    if score > best_across_word['score']:
+                        best_across_word['last_letter_index'] = [i, j]
+                        best_across_word['word'] = word
+                        best_across_word['score'] = score
 
             # Keep extending right to form words.
             extend_right(
@@ -601,7 +607,7 @@ if __name__ == '__main__':
         i, j = index
 
         # Base Case - no common letters or out of the gameboard bounds.
-        if i > 14 or not intersection(rack, down_cross_checks[j][i]):
+        if i > 14 or (GAME_BOARD[i][j] == ' ' and not intersection(rack, down_cross_checks[j][i])):
             return
 
         # For the current coordinate, find common letters between the rack and cross checks.
@@ -611,15 +617,16 @@ if __name__ == '__main__':
         if GAME_BOARD[i][j] == ' ':
             for letter in common_letters:
                 # Score the current word, if it's in the dictionary.
-                if (current_word + letter).lower() in DICTIONARY and i + 1 < 15 and GAME_BOARD[i + 1][j] == ' ':
-                    word = current_word + letter
-                    score = score_word_down(word, [i, j], rack_played_incides + [[i, j]])
+                if (current_word + letter).lower() in DICTIONARY:
+                    if (i + 1 < 15 and GAME_BOARD[i + 1][j] == ' ') or i == 14:
+                        word = current_word + letter
+                        score = score_word_down(word, [i, j], rack_played_incides + [[i, j]])
 
-                    # Update the best across word, if the score of the current word is better.
-                    if score > best_down_word['score']:
-                        best_down_word['last_letter_index'] = [i, j]
-                        best_down_word['word'] = word
-                        best_down_word['score'] = score
+                        # Update the best across word, if the score of the current word is better.
+                        if score > best_down_word['score']:
+                            best_down_word['last_letter_index'] = [i, j]
+                            best_down_word['word'] = word
+                            best_down_word['score'] = score
                 
                 # Keep extending down to form words.
                 extend_down(
@@ -633,14 +640,15 @@ if __name__ == '__main__':
         else:
             # Score the current word, if it's in the dictionary.
             if (current_word + GAME_BOARD[i][j]).lower() in DICTIONARY:
-                word = current_word + GAME_BOARD[i][j]
-                score = score_word_down(word, [i, j], rack_played_incides)
+                if (i + 1 < 15 and GAME_BOARD[i + 1][j] == ' ') or i == 14:
+                    word = current_word + GAME_BOARD[i][j]
+                    score = score_word_down(word, [i, j], rack_played_incides)
 
-                # Update the best across word, if the score of the current word is better.
-                if score > best_down_word['score']:
-                    best_down_word['last_letter_index'] = [i, j]
-                    best_down_word['word'] = word
-                    best_down_word['score'] = score
+                    # Update the best across word, if the score of the current word is better.
+                    if score > best_down_word['score']:
+                        best_down_word['last_letter_index'] = [i, j]
+                        best_down_word['word'] = word
+                        best_down_word['score'] = score
 
             # Keep extending right to form words.
             extend_down(
