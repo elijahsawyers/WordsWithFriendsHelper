@@ -88,20 +88,6 @@ GAME_BOARD_BONUSES = [
     ['  ', '  ', '  ', 'TW', '  ', '  ', 'TL', '  ', 'TL', '  ', '  ', 'TW', '  ', '  ', '  '],
 ]
 
-def score_word(word):
-    '''
-    Given a word, compute it's score.
-
-    Parameter {str} word the word to compute the score of.
-    Returns {int} the score of the word.
-    '''
-    score = 0
-
-    for letter in word:
-        score += LETTER_VALUES[letter]
-    
-    return score
-
 def compute_across_cross_checks(game_board):
     '''
     Given the game board, this function determines which letters can fit in each
@@ -254,16 +240,6 @@ def intersection(lst1, lst2):
     '''
     return [value for value in lst1 if value in lst2]
 
-def extend_right():
-    '''
-    TODO
-    '''
-
-def left_part():
-    '''
-    TODO
-    '''
-
 if __name__ == '__main__':
     RACK = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
     GAME_BOARD = [
@@ -274,10 +250,10 @@ if __name__ == '__main__':
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'A', 'P', 'P', 'L', 'E', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'E', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'A', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'S', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
@@ -289,8 +265,175 @@ if __name__ == '__main__':
 
     # Compute the highest scoring across word.
     best_across_word = {
-        'start': [-1, -1],
-        'end': [-1, -1],
+        'last_letter_index': [-1, -1],
         'word': '',
         'score': 0
     }
+
+    def score_word_across(word, last_index, rack_letter_indices):
+        '''
+        Given a word, compute it's score.
+
+        Parameter {str} word the word to compute the score of.
+        Parameter {list<int>} last_index the coordinates of the last letter
+        of the word on the board.
+        Parameter {list<int>} rack_letter_indices the indices of letters
+        played from the rack.
+        Returns {int} the score of the word.
+        '''
+        i, j = last_index
+        score = 0
+
+        for k in range(len(word)):
+            # Compute cross word point values.
+            if [i, j - k] in rack_letter_indices:
+                if i != 0 and GAME_BOARD[i - 1][j - k] != ' ':
+                    l = i - 1
+                    while l > -1 and GAME_BOARD[l][j - k] != ' ':
+                        score += LETTER_VALUES[GAME_BOARD[l][j - k]]
+                        l -= 1
+                if i != 14 and GAME_BOARD[i + 1][j - k] != ' ':
+                    l = i + 1
+                    while l < 15 and GAME_BOARD[l][j - k] != ' ':
+                        score += LETTER_VALUES[GAME_BOARD[l][j - k]]
+                        l -= 1
+
+            score += LETTER_VALUES[word[k]]
+        
+        return score
+
+    def extend_right(index, rack, current_word, rack_played_incides):
+        '''
+        TODO
+        '''
+
+        # Extract the gameboard coordinates.
+        i, j = index
+
+        # Base Case - no common letters or out of the gameboard bounds.
+        if j > 14 or not intersection(rack, across_cross_checks[i][j]):
+            return
+
+        # For the current coordinate, find common letters between the rack and cross checks.
+        common_letters = intersection(rack, across_cross_checks[i][j])
+
+        # Case 1: empty cell.
+        if GAME_BOARD[i][j] == ' ':
+            for letter in common_letters:
+                # Score the current word, if it's in the dictionary.
+                if (current_word + letter).lower() in DICTIONARY:
+                    word = current_word + letter
+                    score = score_word_across(word, [i, j], rack_played_incides)
+
+                    # Update the best across word, if the score of the current word is better.
+                    if score > best_across_word['score']:
+                        best_across_word['last_letter_index'] = [i, j]
+                        best_across_word['word'] = word
+                        best_across_word['score'] = score
+                
+                # Keep extending right to form words.
+                extend_right(
+                    [i, j + 1],
+                    list(filter(lambda x: x != letter, rack)),
+                    current_word + letter,
+                    rack_played_incides + [[i, j]]
+                )
+
+        # Case 2: occupied cell.
+        else:
+            # Score the current word, if it's in the dictionary.
+            if (current_word + GAME_BOARD[i][j]).lower() in DICTIONARY:
+                word = current_word + GAME_BOARD[i][j]
+                score = score_word_across(word, [i, j], rack_played_incides)
+
+                # Update the best across word, if the score of the current word is better.
+                if score > best_across_word['score']:
+                    best_across_word['last_letter_index'] = [i, j]
+                    best_across_word['word'] = word
+                    best_across_word['score'] = score
+
+            # Keep extending right to form words.
+            extend_right(
+                [i, j + 1],
+                rack,
+                current_word + GAME_BOARD[i][j],
+                rack_played_incides
+            )
+
+    def extend_right_with_left_part(index, rack, left_part):
+        '''
+        TODO
+        '''
+
+        # Extract the gameboard coordinates.
+        i, j = index
+
+        # Base Case - no common letters or out of the gameboard bounds.
+        if j < 0 or not intersection(rack, across_cross_checks[i][j]):
+            return
+
+        # For the current coordinate, find common letters between the rack and cross checks.
+        common_letters = intersection(rack, across_cross_checks[i][j])
+
+        # Case 1: the cell to the left of the current index is empty, or j = 0.
+        if j == 0 or GAME_BOARD[i][j - 1] == ' ':
+            for letter in common_letters:
+                word = letter + left_part
+                rack_played_incides = []
+
+                for k in range(len(word)):
+                    rack_played_incides += [[i, j + k]]
+
+                # Extend right to form words.
+                extend_right(
+                    [i, j + len(word)],
+                    list(filter(lambda x: x != letter, rack)),
+                    word,
+                    rack_played_incides
+                )
+
+                # Keep extending left.
+                extend_right_with_left_part(
+                    [i, j - 1],
+                    list(filter(lambda x: x != letter, rack)),
+                    word
+                )
+        # Case 2: the cell to the left of the current index is occupied.
+        else:
+            pass
+
+    for i in range(15):
+        for j in range(15):
+            if anchors[i][j]:
+                # Case 1: cell to the left of the anchor is empty.
+                if j != 0 and GAME_BOARD[i][j - 1] == ' ':
+                    extend_right(
+                        [i, j],
+                        RACK,
+                        '',
+                        []
+                    )
+
+                    extend_right_with_left_part(
+                        [i, j],
+                        RACK,
+                        ''
+                    )
+                # Case 2: cell to the left of the anchor is occupied.
+                else:
+                    # Grab the word to the left of the anchor, if there is one.
+                    word = ''
+                    k = j - 1
+                    while k != -1 and GAME_BOARD[i][k] != ' ':
+                        word = GAME_BOARD[i][k] + word
+                        k -= 1
+                    
+                    # Compute possible words extending right of the anchor.
+                    extend_right(
+                        [i, j],
+                        RACK,
+                        word,
+                        []
+                    )
+
+    print(best_across_word)
