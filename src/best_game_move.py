@@ -2,7 +2,7 @@
 Authors: Elijah Sawyers
 Emails: elijahsawyers@gmail.com
 Date: 03/27/2020
-Reference: https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf
+Reference: Loosely based on https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf
 '''
 
 from itertools import permutations
@@ -241,23 +241,23 @@ def intersection(lst1, lst2):
     return [value for value in lst1 if value in lst2]
 
 if __name__ == '__main__':
-    RACK = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+    RACK = ['E', 'O', 'R', 'S', 'L', 'I', 'B']
     GAME_BOARD = [
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'A', 'P', 'P', 'L', 'E', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'E', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'A', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'S', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'B'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'U'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'V', 'A', 'U', 'L', 'T', 'Y'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'T', 'E', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'Z', 'A', 'X', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'A', 'N', 'I', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', 'B', 'E', 'E', 'P', 'S', ' ', 'L', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', 'U', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['M', 'A', 'I', 'R', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['A', 'W', ' ', 'N', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', 'E', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', 'R', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
     ]
     anchors = compute_anchors(GAME_BOARD)
     across_cross_checks = compute_across_cross_checks(GAME_BOARD)
@@ -282,32 +282,84 @@ if __name__ == '__main__':
         Returns {int} the score of the word.
         '''
         i, j = last_index
-        score = 0
+        dw = 0
+        tw = 0
+
+        # Compute the across word point value.
+        across_word_score = 0
+        for letter in word:
+            across_word_score += LETTER_VALUES[letter]
+
+        # Compute cross word point values.
+        cross_words_scores = []
+        for letter in word:
+            cross_words_scores.append(0)
 
         for k in range(len(word)):
-            # Compute cross word point values.
-            cross_word = False
-
             if [i, j - k] in rack_letter_indices:
                 if i != 0 and GAME_BOARD[i - 1][j - k] != ' ':
-                    cross_word = True
                     l = i - 1
                     while l > -1 and GAME_BOARD[l][j - k] != ' ':
-                        score += LETTER_VALUES[GAME_BOARD[l][j - k]]
+                        cross_words_scores[k] += LETTER_VALUES[GAME_BOARD[l][j - k]]
                         l -= 1
                 if i != 14 and GAME_BOARD[i + 1][j - k] != ' ':
-                    cross_word = True
                     l = i + 1
                     while l < 15 and GAME_BOARD[l][j - k] != ' ':
-                        score += LETTER_VALUES[GAME_BOARD[l][j - k]]
+                        cross_words_scores[k] += LETTER_VALUES[GAME_BOARD[l][j - k]]
                         l += 1
 
-            if cross_word:
-                score += LETTER_VALUES[word[k]] * 2
-            else:
-                score += LETTER_VALUES[word[k]]
+                # Compute bonus scores.
+                # Double Letter.
+                if GAME_BOARD_BONUSES[i][j - k] == 'DL':
+                    across_word_score += LETTER_VALUES[word[len(word) - k - 1]]
 
-        return score
+                    if (
+                        i != 0 and GAME_BOARD[i - 1][j - k] != ' ' or
+                        i != 14 and GAME_BOARD[i + 1][j - k] != ' '
+                    ):
+                        cross_words_scores[k] += LETTER_VALUES[word[len(word) - k - 1]]
+                # Triple Letter.
+                elif GAME_BOARD_BONUSES[i][j - k] == 'TL':
+                    across_word_score += LETTER_VALUES[word[len(word) - k - 1]] * 2
+
+                    if [i, j] == [11, 11] and word == 'DECAF':
+                        across_word_score
+
+                    if (
+                        i != 0 and GAME_BOARD[i - 1][j - k] != ' ' or
+                        i != 14 and GAME_BOARD[i + 1][j - k] != ' '
+                    ):
+                        cross_words_scores[k] += LETTER_VALUES[word[len(word) - k - 1]] * 2
+                # Double Word.
+                elif GAME_BOARD_BONUSES[i][j - k] == 'DW':
+                    dw += 1
+
+                    cross_words_scores[k] *= 2
+                # Triple Word.
+                elif GAME_BOARD_BONUSES[i][j - k] == 'TW':
+                    tw += 1
+
+                    cross_words_scores[k] *= 3
+
+                if (
+                    i != 0 and GAME_BOARD[i - 1][j - k] != ' ' or
+                    i != 14 and GAME_BOARD[i + 1][j - k] != ' '
+                ):
+                    cross_words_scores[k] += LETTER_VALUES[word[len(word) - k - 1]]
+
+        for k in range(dw):
+            across_word_score *= 2
+
+        for k in range(tw):
+            across_word_score *= 3
+
+        if len(rack_letter_indices) == 7:
+            across_word_score *= 2
+
+        for score in cross_words_scores:
+            across_word_score += score
+
+        return across_word_score
 
     def extend_right(index, rack, current_word, rack_played_incides):
         '''
@@ -328,9 +380,9 @@ if __name__ == '__main__':
         if GAME_BOARD[i][j] == ' ':
             for letter in common_letters:
                 # Score the current word, if it's in the dictionary.
-                if (current_word + letter).lower() in DICTIONARY:
+                if (current_word + letter).lower() in DICTIONARY and j + 1 < 15 and GAME_BOARD[i][j + 1] == ' ':
                     word = current_word + letter
-                    score = score_word_across(word, [i, j], rack_played_incides)
+                    score = score_word_across(word, [i, j], rack_played_incides + [[i, j]])
 
                     # Update the best across word, if the score of the current word is better.
                     if score > best_across_word['score']:
@@ -464,32 +516,81 @@ if __name__ == '__main__':
         Returns {int} the score of the word.
         '''
         i, j = last_index
-        score = 0
+        dw = 0
+        tw = 0
+
+        # Compute the down word point value.
+        down_word_score = 0
+        for letter in word:
+            down_word_score += LETTER_VALUES[letter]
+
+        # Compute cross word point values.
+        cross_words_scores = []
+        for letter in word:
+            cross_words_scores.append(0)
 
         for k in range(len(word)):
-            # Compute cross word point values.
-            cross_word = False
-
             if [i - k, j] in rack_letter_indices:
                 if j != 0 and GAME_BOARD[i - k][j - 1] != ' ':
-                    cross_word = True
                     l = j - 1
                     while l > -1 and GAME_BOARD[i - k][l] != ' ':
-                        score += LETTER_VALUES[GAME_BOARD[i - k][l]]
+                        cross_words_scores[k] += LETTER_VALUES[GAME_BOARD[i - k][l]]
                         l -= 1
                 if j != 14 and GAME_BOARD[i - k][j + 1] != ' ':
-                    cross_word = True
                     l = j + 1
                     while l < 15 and GAME_BOARD[i - k][l] != ' ':
-                        score += LETTER_VALUES[GAME_BOARD[i - k][l]]
+                        cross_words_scores[k] += LETTER_VALUES[GAME_BOARD[i - k][l]]
                         l += 1
 
-            if cross_word:
-                score += LETTER_VALUES[word[k]] * 2
-            else:
-                score += LETTER_VALUES[word[k]]
+                # Compute bonus scores.
+                # Double Letter.
+                if GAME_BOARD_BONUSES[i - k][j] == 'DL':
+                    down_word_score += LETTER_VALUES[word[len(word) - k - 1]]
+
+                    if (
+                        j != 0 and GAME_BOARD[i - k][j - 1] != ' ' or
+                        j != 14 and GAME_BOARD[i - k][j + 1] != ' '
+                    ):
+                        cross_words_scores[k] += LETTER_VALUES[word[len(word) - k - 1]]
+                # Triple Letter.
+                elif GAME_BOARD_BONUSES[i - k][j] == 'TL':
+                    down_word_score += LETTER_VALUES[word[len(word) - k - 1]] * 2
+
+                    if (
+                        j != 0 and GAME_BOARD[i - k][j - 1] != ' ' or
+                        j != 14 and GAME_BOARD[i - k][j + 1] != ' '
+                    ):
+                        cross_words_scores[k] += LETTER_VALUES[word[len(word) - k - 1]] * 2
+                # Double Word.
+                elif GAME_BOARD_BONUSES[i - k][j] == 'DW':
+                    dw += 1
+
+                    cross_words_scores[k] *= 2
+                # Triple Word.
+                elif GAME_BOARD_BONUSES[i - k][j] == 'TW':
+                    tw += 1
+
+                    cross_words_scores[k] *= 3
+
+                if (
+                    j != 0 and GAME_BOARD[i - k][j - 1] != ' ' or
+                    j != 14 and GAME_BOARD[i - k][j + 1] != ' '
+                ):
+                    cross_words_scores[k] += LETTER_VALUES[word[len(word) - k - 1]]
+
+        for k in range(dw):
+            down_word_score *= 2
+
+        for k in range(tw):
+            down_word_score *= 3
         
-        return score
+        if len(rack_letter_indices) == 7:
+            down_word_score *= 2
+
+        for score in cross_words_scores:
+            down_word_score += score
+
+        return down_word_score
 
     def extend_down(index, rack, current_word, rack_played_incides):
         '''
@@ -510,9 +611,9 @@ if __name__ == '__main__':
         if GAME_BOARD[i][j] == ' ':
             for letter in common_letters:
                 # Score the current word, if it's in the dictionary.
-                if (current_word + letter).lower() in DICTIONARY:
+                if (current_word + letter).lower() in DICTIONARY and i + 1 < 15 and GAME_BOARD[i + 1][j] == ' ':
                     word = current_word + letter
-                    score = score_word_down(word, [i, j], rack_played_incides)
+                    score = score_word_down(word, [i, j], rack_played_incides + [[i, j]])
 
                     # Update the best across word, if the score of the current word is better.
                     if score > best_down_word['score']:
