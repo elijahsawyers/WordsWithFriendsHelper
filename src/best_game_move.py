@@ -286,20 +286,27 @@ if __name__ == '__main__':
 
         for k in range(len(word)):
             # Compute cross word point values.
+            cross_word = False
+
             if [i, j - k] in rack_letter_indices:
                 if i != 0 and GAME_BOARD[i - 1][j - k] != ' ':
+                    cross_word = True
                     l = i - 1
                     while l > -1 and GAME_BOARD[l][j - k] != ' ':
                         score += LETTER_VALUES[GAME_BOARD[l][j - k]]
                         l -= 1
                 if i != 14 and GAME_BOARD[i + 1][j - k] != ' ':
+                    cross_word = True
                     l = i + 1
                     while l < 15 and GAME_BOARD[l][j - k] != ' ':
                         score += LETTER_VALUES[GAME_BOARD[l][j - k]]
-                        l -= 1
+                        l += 1
 
-            score += LETTER_VALUES[word[k]]
-        
+            if cross_word:
+                score += LETTER_VALUES[word[k]] * 2
+            else:
+                score += LETTER_VALUES[word[k]]
+
         return score
 
     def extend_right(index, rack, current_word, rack_played_incides):
@@ -415,7 +422,7 @@ if __name__ == '__main__':
                     )
 
                     extend_right_with_left_part(
-                        [i, j],
+                        [i, j - 1],
                         RACK,
                         ''
                     )
@@ -437,3 +444,186 @@ if __name__ == '__main__':
                     )
 
     print(best_across_word)
+
+    # Compute the highest scoring down word.
+    best_down_word = {
+        'last_letter_index': [-1, -1],
+        'word': '',
+        'score': 0
+    }
+
+    def score_word_down(word, last_index, rack_letter_indices):
+        '''
+        Given a word, compute it's score.
+
+        Parameter {str} word the word to compute the score of.
+        Parameter {list<int>} last_index the coordinates of the last letter
+        of the word on the board.
+        Parameter {list<int>} rack_letter_indices the indices of letters
+        played from the rack.
+        Returns {int} the score of the word.
+        '''
+        i, j = last_index
+        score = 0
+
+        for k in range(len(word)):
+            # Compute cross word point values.
+            cross_word = False
+
+            if [i - k, j] in rack_letter_indices:
+                if j != 0 and GAME_BOARD[i - k][j - 1] != ' ':
+                    cross_word = True
+                    l = j - 1
+                    while l > -1 and GAME_BOARD[i - k][l] != ' ':
+                        score += LETTER_VALUES[GAME_BOARD[i - k][l]]
+                        l -= 1
+                if j != 14 and GAME_BOARD[i - k][j + 1] != ' ':
+                    cross_word = True
+                    l = j + 1
+                    while l < 15 and GAME_BOARD[i - k][l] != ' ':
+                        score += LETTER_VALUES[GAME_BOARD[i - k][l]]
+                        l += 1
+
+            if cross_word:
+                score += LETTER_VALUES[word[k]] * 2
+            else:
+                score += LETTER_VALUES[word[k]]
+        
+        return score
+
+    def extend_down(index, rack, current_word, rack_played_incides):
+        '''
+        TODO
+        '''
+
+        # Extract the gameboard coordinates.
+        i, j = index
+
+        # Base Case - no common letters or out of the gameboard bounds.
+        if i > 14 or not intersection(rack, down_cross_checks[j][i]):
+            return
+
+        # For the current coordinate, find common letters between the rack and cross checks.
+        common_letters = intersection(rack, down_cross_checks[j][i])
+
+        # Case 1: empty cell.
+        if GAME_BOARD[i][j] == ' ':
+            for letter in common_letters:
+                # Score the current word, if it's in the dictionary.
+                if (current_word + letter).lower() in DICTIONARY:
+                    word = current_word + letter
+                    score = score_word_down(word, [i, j], rack_played_incides)
+
+                    # Update the best across word, if the score of the current word is better.
+                    if score > best_down_word['score']:
+                        best_down_word['last_letter_index'] = [i, j]
+                        best_down_word['word'] = word
+                        best_down_word['score'] = score
+                
+                # Keep extending down to form words.
+                extend_down(
+                    [i + 1, j],
+                    list(filter(lambda x: x != letter, rack)),
+                    current_word + letter,
+                    rack_played_incides + [[i, j]]
+                )
+
+        # Case 2: occupied cell.
+        else:
+            # Score the current word, if it's in the dictionary.
+            if (current_word + GAME_BOARD[i][j]).lower() in DICTIONARY:
+                word = current_word + GAME_BOARD[i][j]
+                score = score_word_down(word, [i, j], rack_played_incides)
+
+                # Update the best across word, if the score of the current word is better.
+                if score > best_down_word['score']:
+                    best_down_word['last_letter_index'] = [i, j]
+                    best_down_word['word'] = word
+                    best_down_word['score'] = score
+
+            # Keep extending right to form words.
+            extend_down(
+                [i + 1, j],
+                rack,
+                current_word + GAME_BOARD[i][j],
+                rack_played_incides
+            )
+
+    def extend_down_with_top_part(index, rack, left_part):
+        '''
+        TODO
+        '''
+
+        # Extract the gameboard coordinates.
+        i, j = index
+
+        # Base Case - no common letters or out of the gameboard bounds.
+        if i < 0 or not intersection(rack, down_cross_checks[j][i]):
+            return
+
+        # For the current coordinate, find common letters between the rack and cross checks.
+        common_letters = intersection(rack, down_cross_checks[j][i])
+
+        # Case 1: the cell above the current index is empty, or i = 0.
+        if i == 0 or GAME_BOARD[i - 1][j] == ' ':
+            for letter in common_letters:
+                word = letter + left_part
+                rack_played_incides = []
+
+                for k in range(len(word)):
+                    rack_played_incides += [[i + k, j]]
+
+                # Extend right to form words.
+                extend_down(
+                    [i + len(word), j],
+                    list(filter(lambda x: x != letter, rack)),
+                    word,
+                    rack_played_incides
+                )
+
+                # Keep extending left.
+                extend_down_with_top_part(
+                    [i - 1, j],
+                    list(filter(lambda x: x != letter, rack)),
+                    word
+                )
+        # Case 2: the cell to the left of the current index is occupied.
+        else:
+            pass
+
+    # Compute best across word.
+    for i in range(15):
+        for j in range(15):
+            if anchors[i][j]:
+                # Case 1: cell above the anchor is empty.
+                if i != 0 and GAME_BOARD[i - 1][j] == ' ':
+                    extend_down(
+                        [i, j],
+                        RACK,
+                        '',
+                        []
+                    )
+
+                    extend_down_with_top_part(
+                        [i - 1, j],
+                        RACK,
+                        ''
+                    )
+                # Case 2: cell above the anchor is occupied.
+                else:
+                    # Grab the word above the anchor, if there is one.
+                    word = ''
+                    k = i - 1
+                    while k != -1 and GAME_BOARD[k][j] != ' ':
+                        word = GAME_BOARD[k][j] + word
+                        k -= 1
+
+                    # Compute possible words extending down from the anchor.
+                    extend_down(
+                        [i, j],
+                        RACK,
+                        word,
+                        []
+                    )
+    
+    print(best_down_word)
