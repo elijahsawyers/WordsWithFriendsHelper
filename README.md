@@ -58,6 +58,10 @@ Now visit your localhost in the browser of your choice!
 ## Demo 
 Checkout the demo below!
 
+<p align="center">
+  <img src="https://github.com/elijahsawyers/WordsWithFriendsHelper/raw/master/Demo.gif" />
+</p>
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
