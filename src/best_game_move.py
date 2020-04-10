@@ -234,15 +234,12 @@ def compute_anchors(game_board):
 
     return anchors
 
-def intersection(lst1, lst2):
+def populate_game_board(letters):
     '''
     TODO
     '''
-    return [value for value in lst1 if value in lst2]
 
-if __name__ == '__main__':
-    RACK = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-    GAME_BOARD = [
+    game_board = [
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
@@ -259,6 +256,25 @@ if __name__ == '__main__':
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
     ]
+
+    for letter in letters:
+        i = int(letter['index'] / 15)
+        j = letter['index'] % 15
+        letter = letter['letter']
+
+        game_board[i][j] = letter
+    
+    return game_board
+
+def intersection(lst1, lst2):
+    '''
+    TODO
+    '''
+    return [value for value in lst1 if value in lst2]
+
+def compute(json_data):
+    RACK = json_data['userLetters']
+    GAME_BOARD = populate_game_board(json_data['gameLetters'])
     anchors = compute_anchors(GAME_BOARD)
     across_cross_checks = compute_across_cross_checks(GAME_BOARD)
     down_cross_checks = compute_down_cross_checks(GAME_BOARD)
@@ -267,7 +283,8 @@ if __name__ == '__main__':
     best_across_word = {
         'last_letter_index': [-1, -1],
         'word': '',
-        'score': 0
+        'score': 0,
+        'direction': 'across'
     }
 
     def score_word_across(word, last_index, rack_letter_indices):
@@ -501,13 +518,12 @@ if __name__ == '__main__':
                         []
                     )
 
-    print(best_across_word)
-
     # Compute the highest scoring down word.
     best_down_word = {
         'last_letter_index': [-1, -1],
         'word': '',
-        'score': 0
+        'score': 0,
+        'direction': 'down'
     }
 
     def score_word_down(word, last_index, rack_letter_indices):
@@ -734,5 +750,8 @@ if __name__ == '__main__':
                         word,
                         []
                     )
-    
-    print(best_down_word)
+
+    if best_across_word['score'] > best_down_word['score']:
+        return best_across_word
+    else:
+        return best_down_word

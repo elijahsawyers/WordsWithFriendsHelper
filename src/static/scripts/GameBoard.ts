@@ -7,8 +7,7 @@ import {LetterValues} from './Letter';
 
 /** Represents the game board. */
 export default class GameBoard {
-  static height = 15;
-  static width = 15;
+  dimensions = 15;
   #table: HTMLElement;
   #cells: Array<GameBoardCell>;
   #userLetters: Array<Cell>;
@@ -158,11 +157,31 @@ export default class GameBoard {
       postData.userLetters.push(this.#userLetters[i].letter?.letter);
     }
 
+    // Make an xhr request to get the best possible game move.
+    const self = this;
     const xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function(): void {
       if (this.readyState == 4 && this.status == 200) {
         const bestMove = JSON.parse(xhr.responseText);
-        console.log(bestMove);
+        const word = bestMove['word'];
+        const score = bestMove['bestScore'];
+        const direction = bestMove['direction'];
+        let currentIndex =
+          bestMove['last_letter_index'][0] * 15 + bestMove['last_letter_index'][1];
+
+        for (let i = 0; i < word.length; i++) {
+          self.#cells[currentIndex].toggleBestMove();
+          self.#cells[currentIndex].letter = {
+            letter: word[word.length - i - 1],
+            value: LetterValues[word[word.length - i - 1]]
+          };
+
+          if (direction == 'across') {
+            currentIndex -= 1;
+          } else {
+            currentIndex -= self.dimensions;
+          }
+        }
       }
     }
     xhr.open('POST', '/bestGameMove');

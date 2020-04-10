@@ -10,7 +10,7 @@ const browserify = require('browserify');
 const source = require('vinyl-source-stream');
 const tsify = require('tsify');
 
-const build = parallel(copyPython, copyHtml, copyStyles, copyAssets, bundle);
+const build = parallel(copyPython, copyTxt, copyHtml, copyStyles, copyAssets, bundle);
 
 /**
  * Moves source python files into the distribution folder.
@@ -20,6 +20,17 @@ const build = parallel(copyPython, copyHtml, copyStyles, copyAssets, bundle);
  */
 function copyPython() {
   return src('src/**/*.py')
+      .pipe(dest('dist'));
+};
+
+/**
+ * Moves txt files into the distribution folder.
+ *
+ * @return {NodeJS.ReadWriteStream} the gulp stream so that the task
+ * will finish before moving to the next task.
+ */
+function copyTxt() {
+  return src('src/**/*.txt')
       .pipe(dest('dist'));
 };
 

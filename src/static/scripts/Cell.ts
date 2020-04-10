@@ -15,6 +15,7 @@ export enum BonusCell {
 /** Represents the base cell class. */
 export class Cell {
   #selected = false;
+  #bestMoveCell = false;
   _cell: HTMLElement;
   _letter: Letter|null;
 
@@ -62,6 +63,19 @@ export class Cell {
       this._cell.classList.add('selected-cell')
     } else {
       this._cell.classList.remove('selected-cell')
+    }
+  }
+
+  /**
+   * Toggles the cell to be a part of the best move (i.e. adds/removes a purple border).
+   */
+  toggleBestMove(): void {
+    this.#bestMoveCell = !this.#bestMoveCell;
+
+    if (this.#bestMoveCell) {
+      this._cell.classList.add('best-move-cell')
+    } else {
+      this._cell.classList.remove('best-move-cell')
     }
   }
 }
