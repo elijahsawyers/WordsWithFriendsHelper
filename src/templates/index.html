@@ -11,14 +11,10 @@
         integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 
     <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
-        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
-        crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Caveat&display=swap" rel="stylesheet">
@@ -331,6 +327,20 @@
 
         <!-- Letter Dock Column -->
         <div class="col align-self-center">
+          <!-- Score Board -->
+          <div id="score-board-container">
+            <div id="score-header">
+              <h2>Score</h2>
+            </div>
+            <div id="score-value-container">
+              <h1 id="score-value">00</h1>
+            </div>
+            <button id="discard" type="button" class="btn btn-danger">Discard</button>
+            <button id="keep" type="button" class="btn btn-secondary">Keep</button>
+          </div>
+          <!-- /Score Board -->
+
+          <!-- Letter Dock -->
           <div id="letter-dock-container">
             <div id="letter-dock">
               <div class="letter user-letter"></div>
@@ -341,8 +351,13 @@
               <div class="letter user-letter"></div>
               <div class="letter user-letter"></div>
             </div>
-            <button id="go" type="button" class="btn btn-success btn-block">Go!</button>
+            <button id="clear" type="button" class="btn btn-danger">Clear</button>
+            <button id="go" type="button" class="btn btn-success">
+              <span id="loader" class="spinner-border spinner-border-sm hidden" role="status" aria-hidden="true"></span>
+              Go
+            </button>
           </div>
+          <!-- /Letter Dock -->
         </div>
         <!-- /Letter Dock Column -->
       </div>

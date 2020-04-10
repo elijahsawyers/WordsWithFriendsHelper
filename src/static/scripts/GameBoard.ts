@@ -9,7 +9,11 @@ import {LetterValues} from './Letter';
 export default class GameBoard {
   dimensions = 15;
   #table: HTMLElement;
+  #score: HTMLElement;
+  #loader: HTMLElement;
   #cells: Array<GameBoardCell>;
+  #bestMovePlayedCells: Array<Cell>;
+  #bestMoveRackCells: Array<Cell>;
   #userLetters: Array<Cell>;
   #currentSelectedCell: Cell|null;
 
@@ -22,7 +26,11 @@ export default class GameBoard {
     this.#table = table;
     this.#cells = [];
     this.#userLetters = [];
+    this.#bestMovePlayedCells = [];
+    this.#bestMoveRackCells = [];
     this.#currentSelectedCell = null;
+    this.#score = document.getElementById('score-value') as HTMLElement;
+    this.#loader = document.getElementById('loader') as HTMLElement;
     this.initializeGameboardCells();
     this.initializeUserCells();
 
@@ -72,6 +80,7 @@ export default class GameBoard {
 
     // Handle cell clicks.
     if (target.classList.contains('game-board-cell') || target.classList.contains('user-letter')) {
+      this.discard();
       let clickedCell;
 
       if (target.classList.contains('game-board-cell')) {
@@ -99,9 +108,24 @@ export default class GameBoard {
       }
     }
 
-    // Handle click's on the "go" button.
+    // Handle clicks on the "clear" button.
+    if (target.id == 'clear') {
+      this.clear();
+    }
+
+    // Handle clicks on the "go" button.
     if (target.id == 'go') {
       this.computeBestMove();
+    }
+
+    // Handle clicks on the "discard" button.
+    if (target.id == 'discard') {
+      this.discard();
+    }
+
+    // Handle clicks on the "keep" button.
+    if (target.id == 'keep') {
+      this.keep();
     }
   }
 
@@ -133,6 +157,11 @@ export default class GameBoard {
    * and displays the result on the gameboard with letters with a purple border.
    */
   private computeBestMove(): void {
+    this.#loader.classList.remove('hidden');
+    if (this.#currentSelectedCell != null) this.#currentSelectedCell.toggleSelected();
+    this.#currentSelectedCell = null;
+    this.discard();
+
     // Construct the post data - game points and user letters.
     interface GameLetter {
       letter: string|undefined;
@@ -158,20 +187,25 @@ export default class GameBoard {
     }
 
     // Make an xhr request to get the best possible game move.
-    const self = this;
     const xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function(): void {
-      if (this.readyState == 4 && this.status == 200) {
+    xhr.onreadystatechange = (): void => {
+      if (xhr.readyState == 4 && xhr.status == 200) {
+        this.#loader.classList.add('hidden');
         const bestMove = JSON.parse(xhr.responseText);
         const word = bestMove['word'];
-        const score = bestMove['bestScore'];
+        const score = bestMove['score'];
         const direction = bestMove['direction'];
         let currentIndex =
           bestMove['last_letter_index'][0] * 15 + bestMove['last_letter_index'][1];
 
         for (let i = 0; i < word.length; i++) {
-          self.#cells[currentIndex].toggleBestMove();
-          self.#cells[currentIndex].letter = {
+          this.#score.innerHTML = score;
+
+          if (!this.#cells[currentIndex].letter) this.#bestMoveRackCells.push(this.#cells[currentIndex]);
+          else this.#bestMovePlayedCells.push(this.#cells[currentIndex]);
+
+          this.#cells[currentIndex].toggleBestMove();
+          this.#cells[currentIndex].letter = {
             letter: word[word.length - i - 1],
             value: LetterValues[word[word.length - i - 1]]
           };
@@ -179,7 +213,7 @@ export default class GameBoard {
           if (direction == 'across') {
             currentIndex -= 1;
           } else {
-            currentIndex -= self.dimensions;
+            currentIndex -= this.dimensions;
           }
         }
       }
@@ -187,5 +221,68 @@ export default class GameBoard {
     xhr.open('POST', '/bestGameMove');
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify(postData));
+  }
+
+  /**
+   * Resets the state of the game board.
+   */
+  clear(): void {
+    if (this.#currentSelectedCell != null) this.#currentSelectedCell.toggleSelected();
+    this.#currentSelectedCell = null;
+
+    for (let i = 0; i < this.#bestMovePlayedCells.length; i++) {
+      this.#bestMovePlayedCells[i].toggleBestMove();
+    }
+
+    for (let i = 0; i < this.#bestMoveRackCells.length; i++) {
+      this.#bestMoveRackCells[i].toggleBestMove();
+    }
+
+    for (let i = 0; i < this.#cells.length; i++) {
+      this.#cells[i].letter = null;
+    }
+
+    for (let i = 0; i < this.#userLetters.length; i++) {
+      this.#userLetters[i].letter = null;
+    }
+
+    this.#score.innerHTML = '0';
+    this.#bestMovePlayedCells = [];
+    this.#bestMoveRackCells = [];
+  }
+
+  /**
+   * Removes the best move from the game board.
+   */
+  discard(): void {
+    for (let i = 0; i < this.#bestMovePlayedCells.length; i++) {
+      this.#bestMovePlayedCells[i].toggleBestMove();
+    }
+
+    for (let i = 0; i < this.#bestMoveRackCells.length; i++) {
+      this.#bestMoveRackCells[i].toggleBestMove();
+      this.#bestMoveRackCells[i].letter = null;
+    }
+
+    this.#bestMovePlayedCells = [];
+    this.#bestMoveRackCells = [];
+    this.#score.innerHTML = '0';
+  }
+
+  /**
+   * Keeps the best move on the game board.
+   */
+  keep(): void {
+    for (let i = 0; i < this.#bestMovePlayedCells.length; i++) {
+      this.#bestMovePlayedCells[i].toggleBestMove();
+    }
+
+    for (let i = 0; i < this.#bestMoveRackCells.length; i++) {
+      this.#bestMoveRackCells[i].toggleBestMove();
+    }
+
+    this.#bestMovePlayedCells = [];
+    this.#bestMoveRackCells = [];
+    this.#score.innerHTML = '0';
   }
 }

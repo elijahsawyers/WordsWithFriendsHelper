@@ -12,12 +12,12 @@
     7. Letter.
     8. Instructions.
     9. Letter Dock.
+   10. Score Board.
 */
 
 /*====================================================================================================
 1. General Styles.
 ====================================================================================================*/
-
 body {
   background-color:#3c6eaa;
   overflow: hidden;
@@ -34,6 +34,10 @@ display: none;
 
 .hidden {
   display: none;
+}
+
+button {
+  box-shadow: none !important;
 }
 
 /*====================================================================================================
@@ -206,8 +210,65 @@ display: none;
   right: 5px;
 }
 
-#go {
+#go, #clear {
+  width: 150px;
+  border-radius: 0 0 10px 0;
+  height: 50px;
+}
+
+#clear {
+  float: left;
+  border-radius: 0 0 0 10px;
+}
+
+/*====================================================================================================
+10. Score Board.
+====================================================================================================*/
+#score-board-container {
   width: 300px;
-  border-radius: 0 0 10px 10px;
+  height: 200px;
+  margin: 0 auto;
+  margin-bottom: 45px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 10px 10px 50px 1px rgba(0,0,0,0.75);
+  align-self: flex-start;
+}
+
+#score-header {
+  width: 300px;
+  height: 50px;
+  padding-top: 5px;
+  text-align: center;
+  background: #343a40;
+  border-radius: 10px 10px 0 0;
+  color: #fff;
+}
+
+#score-header h1 {
+  font-size: 82px;
+  padding: 0 25px;
+}
+
+#score-value-container {
+  height: 100px;
+}
+
+#score-value {
+  font-size: 82px;
+  text-align: right;
+  padding: 0 25px;
+}
+
+#discard {
+  width: 150px;
+  float: left;
+  border-radius: 0 0 0 10px;
+  height: 50px;
+}
+
+#keep {
+  width: 150px;
+  border-radius: 0 0 10px 0;
   height: 50px;
 }
