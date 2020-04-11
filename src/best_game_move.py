@@ -207,30 +207,39 @@ def compute_anchors(game_board):
     '''
     An anchor is defined an empty cell with an adjacent (horizontal or vertical)
     non-empty cell. This returns the binary matrix, where a zero is a non-anchor
-    and a one is an anchor.
+    and a one is an anchor. If there are no anchors, indicating an empty game board,
+    index [7, 7] is set as the only anchor.
 
     Parameter {Array<Array<str>>} game_board the game board letter matrix.
     Returns {Array<Array<int>>} the anchor matrix.
     '''
 
+    no_anchors = True
     anchors = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 
     for i in range(15):
         for j in range(15):
             if game_board[i][j] == ' ':                     # Empty cell.
                 if j != 0 and game_board[i][j - 1] != ' ':  # Letter to the left.
+                    no_anchors = False
                     anchors[i].append(1)
                     continue
                 if j != 14 and game_board[i][j + 1] != ' ': # Letter to the right.
+                    no_anchors = False
                     anchors[i].append(1)
                     continue
                 if i != 0 and game_board[i - 1][j] != ' ':  # Letter above.
+                    no_anchors = False
                     anchors[i].append(1)
                     continue
                 if i != 14 and game_board[i + 1][j] != ' ': # Letter below.
+                    no_anchors = False
                     anchors[i].append(1)
                     continue
             anchors[i].append(0)
+
+    if no_anchors:
+        anchors[7][7] = 1
 
     return anchors
 
