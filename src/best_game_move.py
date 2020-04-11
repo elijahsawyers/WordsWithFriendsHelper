@@ -236,45 +236,61 @@ def compute_anchors(game_board):
 
 def populate_game_board(letters):
     '''
-    TODO
+    Given an letters with their corresponding indices, create the 15x15
+    WWF game board.
+
+    Parameter {Array<dict>} letters the game letters with letter and index
+    key-value pairs.
+    Returns {Array<Array<str>>} the 2d populated gameboard.
     '''
 
-    game_board = [
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-    ]
+    game_board = []
 
+    # Create an empty 15x15 game board.
+    for i in range(15):
+        row = []
+
+        for i in range(15):
+            row += ' '
+        
+        game_board += [row]
+
+    # Populate the letters given into the game board.
     for letter in letters:
         i = int(letter['index'] / 15)
         j = letter['index'] % 15
         letter = letter['letter']
 
         game_board[i][j] = letter
-    
+
     return game_board
 
 def intersection(lst1, lst2):
     '''
-    TODO
+    Given two lists, return the values that are in both lists, i.e. the intersection.
+
+    Parameter {Array<any>} lst1 the first list.
+    Parameter {Array<any>} lst2 the second list.
+    Returns {Array}
     '''
+
     return [value for value in lst1 if value in lst2]
 
 def compute(json_data):
+    '''
+    Given game board letters, and the user's letter rack, compute the best
+    possible move.
+
+    Parameter {dict} json_data request data with the game board letters and the
+    user's letter rack.
+    Returns {dict} data containing the best possible move information.
+    '''
+
+    # Populate the user's letter rack and the game board.
     RACK = json_data['userLetters']
     GAME_BOARD = populate_game_board(json_data['gameLetters'])
+
+    # Compute the anchors and cross checks.
     anchors = compute_anchors(GAME_BOARD)
     across_cross_checks = compute_across_cross_checks(GAME_BOARD)
     down_cross_checks = compute_down_cross_checks(GAME_BOARD)
@@ -287,9 +303,30 @@ def compute(json_data):
         'direction': 'across'
     }
 
+    def filter_rack(rack, letter):
+        '''
+        Removes a letter from the rack and returns it.
+
+        Parameter {Array<str>} rack the rack of letters to filter.
+        Returns {Arrary<str>} the filtered rack.
+        '''
+
+        letter_removed = False
+        new_rack = []
+
+        for current_letter in rack:
+            # Same letter, hasn't been removed.
+            if current_letter == letter and not letter_removed:
+                letter_removed = True
+            # Different letter or letter already removed, add it to the new rack.
+            else:
+                new_rack += current_letter
+
+        return new_rack
+
     def score_word_across(word, last_index, rack_letter_indices):
         '''
-        Given a word, compute it's score.
+        Given a word played across, compute it's score.
 
         Parameter {str} word the word to compute the score of.
         Parameter {list<int>} last_index the coordinates of the last letter
@@ -298,7 +335,11 @@ def compute(json_data):
         played from the rack.
         Returns {int} the score of the word.
         '''
+
+        # Extract the last letter index.
         i, j = last_index
+
+        # Keep up with the number of double and triple word cells played.
         dw = 0
         tw = 0
 
@@ -324,6 +365,12 @@ def compute(json_data):
                     while l < 15 and GAME_BOARD[l][j - k] != ' ':
                         cross_words_scores[k] += LETTER_VALUES[GAME_BOARD[l][j - k]]
                         l += 1
+                
+                if (
+                    i != 0 and GAME_BOARD[i - 1][j - k] != ' ' or
+                    i != 14 and GAME_BOARD[i + 1][j - k] != ' '
+                ):
+                    cross_words_scores[k] += LETTER_VALUES[word[len(word) - k - 1]]
 
                 # Compute bonus scores.
                 # Double Letter.
@@ -358,21 +405,18 @@ def compute(json_data):
 
                     cross_words_scores[k] *= 3
 
-                if (
-                    i != 0 and GAME_BOARD[i - 1][j - k] != ' ' or
-                    i != 14 and GAME_BOARD[i + 1][j - k] != ' '
-                ):
-                    cross_words_scores[k] += LETTER_VALUES[word[len(word) - k - 1]]
-
+        # Factor in double and triple words for the across word.
         for k in range(dw):
             across_word_score *= 2
 
         for k in range(tw):
             across_word_score *= 3
 
+        # If the full rack is played, add 35 to the across word score.
         if len(rack_letter_indices) == 7:
-            across_word_score *= 2
+            across_word_score += 35
 
+        # Add cross word values to the across word value, and return it.
         for score in cross_words_scores:
             across_word_score += score
 
@@ -380,7 +424,15 @@ def compute(json_data):
 
     def extend_right(index, rack, current_word, rack_played_incides):
         '''
-        TODO
+        Given an anchor position, recursively compute possible across word plays by
+        extending right on the board. For each word, compute its point value, and update
+        the best_across_word score accordingly.
+
+        Parameter {Array<int>} index the i, j index of the current position on the board.
+        Parameter {Array<str>} rack the user's letter rack.
+        Parameter {str} current_word the current permutation of the word.
+        Parameter {Array<Array<int>>} rack_played_incides a list of the indices of letters played
+        from the rack while extending right. 
         '''
 
         # Extract the gameboard coordinates.
@@ -389,10 +441,6 @@ def compute(json_data):
         # Base Case - no common letters or out of the gameboard bounds.
         if j > 14 or (GAME_BOARD[i][j] == ' ' and not intersection(rack, across_cross_checks[i][j])):
             return
-        
-        if i == 3 and j == 13:
-            print(current_word, rack)
-            print(intersection(rack, across_cross_checks[i][j]))
 
         # For the current coordinate, find common letters between the rack and cross checks.
         common_letters = intersection(rack, across_cross_checks[i][j])
@@ -415,7 +463,7 @@ def compute(json_data):
                 # Keep extending right to form words.
                 extend_right(
                     [i, j + 1],
-                    list(filter(lambda x: x != letter, rack)),
+                    filter_rack(rack, letter),
                     current_word + letter,
                     rack_played_incides + [[i, j]]
                 )
@@ -444,7 +492,13 @@ def compute(json_data):
 
     def extend_right_with_left_part(index, rack, left_part):
         '''
-        TODO
+        Given a position to the left of an anchor, recursively compute possible across word
+        plays by extending left before extending right on the board. For each word, compute 
+        its point value, and update he best_across_word score accordingly.
+
+        Parameter {Array<int>} index the i, j index of the current position on the board.
+        Parameter {Array<str>} rack the user's letter rack.
+        Parameter {str} left_part the current left_part of the word.
         '''
 
         # Extract the gameboard coordinates.
@@ -469,7 +523,7 @@ def compute(json_data):
                 # Extend right to form words.
                 extend_right(
                     [i, j + len(word)],
-                    list(filter(lambda x: x != letter, rack)),
+                    filter_rack(rack, letter),
                     word,
                     rack_played_incides
                 )
@@ -477,7 +531,7 @@ def compute(json_data):
                 # Keep extending left.
                 extend_right_with_left_part(
                     [i, j - 1],
-                    list(filter(lambda x: x != letter, rack)),
+                    filter_rack(rack, letter),
                     word
                 )
         # Case 2: the cell to the left of the current index is occupied.
@@ -528,7 +582,7 @@ def compute(json_data):
 
     def score_word_down(word, last_index, rack_letter_indices):
         '''
-        Given a word, compute it's score.
+        Given a word played down, compute it's score.
 
         Parameter {str} word the word to compute the score of.
         Parameter {list<int>} last_index the coordinates of the last letter
@@ -537,7 +591,11 @@ def compute(json_data):
         played from the rack.
         Returns {int} the score of the word.
         '''
+
+        # Extract the last letter index.
         i, j = last_index
+
+        # Keep up with the number of double and triple word cells played.
         dw = 0
         tw = 0
 
@@ -563,6 +621,12 @@ def compute(json_data):
                     while l < 15 and GAME_BOARD[i - k][l] != ' ':
                         cross_words_scores[k] += LETTER_VALUES[GAME_BOARD[i - k][l]]
                         l += 1
+                
+                if (
+                    j != 0 and GAME_BOARD[i - k][j - 1] != ' ' or
+                    j != 14 and GAME_BOARD[i - k][j + 1] != ' '
+                ):
+                    cross_words_scores[k] += LETTER_VALUES[word[len(word) - k - 1]]
 
                 # Compute bonus scores.
                 # Double Letter.
@@ -594,21 +658,18 @@ def compute(json_data):
 
                     cross_words_scores[k] *= 3
 
-                if (
-                    j != 0 and GAME_BOARD[i - k][j - 1] != ' ' or
-                    j != 14 and GAME_BOARD[i - k][j + 1] != ' '
-                ):
-                    cross_words_scores[k] += LETTER_VALUES[word[len(word) - k - 1]]
-
+        # Factor in double and triple words for the down word.
         for k in range(dw):
             down_word_score *= 2
 
         for k in range(tw):
             down_word_score *= 3
         
+        # If the full rack is played, add 35 to the down word score.
         if len(rack_letter_indices) == 7:
-            down_word_score *= 2
+            down_word_score += 35
 
+        # Add cross word values to the down word value, and return it.
         for score in cross_words_scores:
             down_word_score += score
 
@@ -616,7 +677,15 @@ def compute(json_data):
 
     def extend_down(index, rack, current_word, rack_played_incides):
         '''
-        TODO
+        Given an anchor position, recursively compute possible down word plays by
+        extending down on the board. For each word, compute its point value, and update
+        the best_down_word score accordingly.
+
+        Parameter {Array<int>} index the i, j index of the current position on the board.
+        Parameter {Array<str>} rack the user's letter rack.
+        Parameter {str} current_word the current permutation of the word.
+        Parameter {Array<Array<int>>} rack_played_incides a list of the indices of letters played
+        from the rack while extending down. 
         '''
 
         # Extract the gameboard coordinates.
@@ -647,7 +716,7 @@ def compute(json_data):
                 # Keep extending down to form words.
                 extend_down(
                     [i + 1, j],
-                    list(filter(lambda x: x != letter, rack)),
+                    filter_rack(rack, letter),
                     current_word + letter,
                     rack_played_incides + [[i, j]]
                 )
@@ -666,7 +735,7 @@ def compute(json_data):
                         best_down_word['word'] = word
                         best_down_word['score'] = score
 
-            # Keep extending right to form words.
+            # Keep extending down to form words.
             extend_down(
                 [i + 1, j],
                 rack,
@@ -674,9 +743,15 @@ def compute(json_data):
                 rack_played_incides
             )
 
-    def extend_down_with_top_part(index, rack, left_part):
+    def extend_down_with_top_part(index, rack, top_part):
         '''
-        TODO
+        Given a position above an anchor, recursively compute possible down word
+        plays by extending up before extending down on the board. For each word, compute 
+        its point value, and update the best_down_word score accordingly.
+
+        Parameter {Array<int>} index the i, j index of the current position on the board.
+        Parameter {Array<str>} rack the user's letter rack.
+        Parameter {str} top_part the current top_part of the word.
         '''
 
         # Extract the gameboard coordinates.
@@ -692,27 +767,27 @@ def compute(json_data):
         # Case 1: the cell above the current index is empty, or i = 0.
         if i == 0 or GAME_BOARD[i - 1][j] == ' ':
             for letter in common_letters:
-                word = letter + left_part
+                word = letter + top_part
                 rack_played_incides = []
 
                 for k in range(len(word)):
                     rack_played_incides += [[i + k, j]]
 
-                # Extend right to form words.
+                # Extend down to form words.
                 extend_down(
                     [i + len(word), j],
-                    list(filter(lambda x: x != letter, rack)),
+                    filter_rack(rack, letter),
                     word,
                     rack_played_incides
                 )
 
-                # Keep extending left.
+                # Keep extending up.
                 extend_down_with_top_part(
                     [i - 1, j],
-                    list(filter(lambda x: x != letter, rack)),
+                    filter_rack(rack, letter),
                     word
                 )
-        # Case 2: the cell to the left of the current index is occupied.
+        # Case 2: the cell above of the current index is occupied.
         else:
             pass
 
