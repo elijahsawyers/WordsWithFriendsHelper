@@ -183,7 +183,9 @@ export default class GameBoard {
     }
 
     for (let i = 0; i < this.#userLetters.length; i++) {
-      postData.userLetters.push(this.#userLetters[i].letter?.letter);
+      if (this.#userLetters[i].letter != null) {
+        postData.userLetters.push(this.#userLetters[i].letter?.letter);
+      }
     }
 
     // Make an xhr request to get the best possible game move.
