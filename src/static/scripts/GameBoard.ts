@@ -199,7 +199,8 @@ export default class GameBoard {
         const direction = bestMove['direction'];
         let currentIndex =
           bestMove['last_letter_index'][0] * 15 + bestMove['last_letter_index'][1];
-
+        
+        // Display the word on the board.
         for (let i = 0; i < word.length; i++) {
           this.#score.innerHTML = score;
 
