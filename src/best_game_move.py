@@ -395,9 +395,6 @@ def compute(json_data):
                 elif GAME_BOARD_BONUSES[i][j - k] == 'TL':
                     across_word_score += LETTER_VALUES[word[len(word) - k - 1]] * 2
 
-                    if [i, j] == [11, 11] and word == 'DECAF':
-                        across_word_score
-
                     if (
                         i != 0 and GAME_BOARD[i - 1][j - k] != ' ' or
                         i != 14 and GAME_BOARD[i + 1][j - k] != ' '
