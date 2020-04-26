@@ -2,71 +2,85 @@
  * @author Elijah Sawyers <elijahsawyers@gmail.com>
  */
 
-import {BonusCell, Cell, UserCell, GameBoardCell} from './Cell';
+import {CellType, Cell, UserCell, GameBoardCell} from './Cell';
 import {LetterValues} from './Letter';
 
 /** Represents the game board. */
 export default class GameBoard {
+  // A 15x15 game board.
   dimensions = 15;
-  #table: HTMLElement;
-  #score: HTMLElement;
-  #loader: HTMLElement;
-  #cells: Array<GameBoardCell>;
-  #bestMovePlayedCells: Array<Cell>;
-  #bestMoveRackCells: Array<Cell>;
-  #userLetters: Array<Cell>;
-  #currentSelectedCell: Cell|null;
 
-  /**
-   * Construct a new game board with a user.
-   *
-   * @param {HTMLElement} table the table HTML element of the game board.
-   */
-  constructor(table: HTMLElement) {
-    this.#table = table;
-    this.#cells = [];
-    this.#userLetters = [];
-    this.#bestMovePlayedCells = [];
-    this.#bestMoveRackCells = [];
-    this.#currentSelectedCell = null;
-    this.#score = document.getElementById('score-value') as HTMLElement;
-    this.#loader = document.getElementById('loader') as HTMLElement;
+  // The HTML element in the DOM that represents the score board.
+  _score: HTMLElement;
+
+  // The HTML element in the DOM that spins in the "go" button.
+  _loader: HTMLElement;
+
+  // The game board cells.
+  _gameBoardCells: Array<Cell>;
+
+  // The cells that are a part of the best possible game move.
+  _bestMoveCells: Array<Cell>;
+
+  // The cells that are a part of the best possible game move, from the user's rack.
+  _bestMoveRackCells: Array<Cell>;
+
+  // The user's letter rack cells.
+  _letterRackCells: Array<Cell>;
+
+  // The cell that is currently selected by the user, or null, if a cell isn't selected.
+  _selectedCell: Cell|null;
+
+  /** Construct a new game board. */
+  constructor() {
+    this._gameBoardCells = [];
+    this._letterRackCells = [];
+    this._bestMoveCells = [];
+    this._bestMoveRackCells = [];
+    this._selectedCell = null;
+
+    // Grab the "score board" and loader elements from the DOM.
+    this._score = document.getElementById('score-value') as HTMLElement;
+    this._loader = document.getElementById('loader') as HTMLElement;
+
+    // Initialize the gameboard cells and letter rack cells.
     this.initializeGameboardCells();
-    this.initializeUserCells();
+    this.initializeLetterRackCells();
 
-    // Setup events.
+    // Setup click and keydown events.
     document.addEventListener('click', this.onClick.bind(this));
     document.addEventListener('keydown', this.onKeyDown.bind(this));
   }
 
   /**
-   * Creates a new Cell object for each cell in the game board,
+   * Creates a new GameBoardCell object for each cell in the game board,
    * and populates the cells array with these newly created cells.
    */
   private initializeGameboardCells(): void {
     const cells = document.getElementsByClassName('game-board-cell');
 
     for (let i = 0; i < cells.length; i++) {
-      let bonusCellType: BonusCell|null = null;
+      let cellType = CellType.plain;
 
-      if (cells[i].classList.contains('double-letter')) bonusCellType = BonusCell.doubleLetter;
-      if (cells[i].classList.contains('triple-letter')) bonusCellType = BonusCell.tripleLetter;
-      if (cells[i].classList.contains('double-word')) bonusCellType = BonusCell.doubleWord;
-      if (cells[i].classList.contains('triple-word')) bonusCellType = BonusCell.tripleWord;
+      if (cells[i].classList.contains('start-cell')) cellType = CellType.start;
+      if (cells[i].classList.contains('double-letter')) cellType = CellType.doubleLetter;
+      if (cells[i].classList.contains('triple-letter')) cellType = CellType.tripleLetter;
+      if (cells[i].classList.contains('double-word')) cellType = CellType.doubleWord;
+      if (cells[i].classList.contains('triple-word')) cellType = CellType.tripleWord;
 
-      this.#cells.push(new GameBoardCell(cells[i] as HTMLElement, bonusCellType));
+      this._gameBoardCells.push(new GameBoardCell(cells[i] as HTMLElement, cellType));
     }
   }
 
   /**
-   * Creates a new Cell object for each cell in the user letter dock,
-   * and populates the user cells array with these newly created cells.
+   * Creates a new UserCell object for each cell in the user letter dock,
+   * and populates the letter dock array with these newly created cells.
    */
-  private initializeUserCells(): void {
+  private initializeLetterRackCells(): void {
     const cells = document.getElementsByClassName('user-letter');
 
     for (let i = 0; i < cells.length; i++) {
-      this.#userLetters.push(new UserCell(cells[i] as HTMLElement));
+      this._letterRackCells.push(new UserCell(cells[i] as HTMLElement));
     }
   }
 
@@ -76,55 +90,31 @@ export default class GameBoard {
    * @param {MouseEvent} e the mouse event object from the click.
    */
   private onClick(e: MouseEvent): void {
+    // Grab the DOM element that was clicked.
     const target = e.target as HTMLElement;
 
     // Handle cell clicks.
-    if (target.classList.contains('game-board-cell') || target.classList.contains('user-letter')) {
+    if (
+      target.classList.contains('game-board-cell') ||
+      target.classList.contains('user-letter')
+    ) {
       this.discard();
-      let clickedCell;
-
-      if (target.classList.contains('game-board-cell')) {
-        clickedCell = this.#cells.filter(cell => {
-          if (cell.cell == target) return cell;
-        })[0];
-      } else {
-        clickedCell = this.#userLetters.filter(cell => {
-          if (cell.cell == target) return cell;
-        })[0];
-      }
-
-      // Clicked cell is the same as the currently selected cell.
-      if (clickedCell == this.#currentSelectedCell) {
-        this.#currentSelectedCell.toggleSelected();
-        this.#currentSelectedCell = null;
-      }
-      // Clicked cell is different than the currently selected cell.
-      else {
-        if (this.#currentSelectedCell != null) {
-          this.#currentSelectedCell.toggleSelected();
-        }
-        this.#currentSelectedCell = clickedCell;
-        this.#currentSelectedCell.toggleSelected();
-      }
+      this.select(target);
     }
-
     // Handle clicks on the "clear" button.
-    if (target.id == 'clear') {
+    else if (target.id == 'clear') {
       this.clear();
     }
-
     // Handle clicks on the "go" button.
-    if (target.id == 'go') {
+    else if (target.id == 'go') {
       this.computeBestMove();
     }
-
     // Handle clicks on the "discard" button.
-    if (target.id == 'discard') {
+    else if (target.id == 'discard') {
       this.discard();
     }
-
     // Handle clicks on the "keep" button.
-    if (target.id == 'keep') {
+    else if (target.id == 'keep') {
       this.keep();
     }
   }
@@ -135,20 +125,25 @@ export default class GameBoard {
    * @param {KeyboardEvent} e the keyboard event object from the keydown.
    */
   private onKeyDown(e: KeyboardEvent): void {
-    if (this.#currentSelectedCell && e.key.search(/^[A-Za-z ]$/) != -1) {
-      this.#currentSelectedCell.letter = {
+    // If an alpha char is pressed, and a cell is selected, set the letter in the cell.
+    if (this._selectedCell && e.key.search(/^[A-Za-z ]$/) != -1) {
+      this._selectedCell.letter = {
         letter: e.key == ' ' ? '?' : e.key.toUpperCase(),
         value: LetterValues[e.key == ' ' ? '?' : e.key.toUpperCase()],
       };
-      this.#currentSelectedCell.toggleSelected();
-      this.#currentSelectedCell = null;
-    } else if (this.#currentSelectedCell && e.key == 'Backspace') {
-      this.#currentSelectedCell.toggleSelected();
-      this.#currentSelectedCell.letter = null;
-      this.#currentSelectedCell = null;
-    } else if (this.#currentSelectedCell && e.key == 'Escape') {
-      this.#currentSelectedCell.toggleSelected();
-      this.#currentSelectedCell = null;
+      this._selectedCell.toggleSelected();
+      this._selectedCell = null;
+    }
+    // If backspace is pressed, and a cell is selected, clear the letter in the cell.
+    else if (this._selectedCell && e.key == 'Backspace') {
+      this._selectedCell.toggleSelected();
+      this._selectedCell.letter = null;
+      this._selectedCell = null;
+    }
+    // If escape is pressed, and a 
+    else if (this._selectedCell && e.key == 'Escape') {
+      this._selectedCell.toggleSelected();
+      this._selectedCell = null;
     }
   }
 
@@ -157,9 +152,9 @@ export default class GameBoard {
    * and displays the result on the gameboard with letters with a purple border.
    */
   private computeBestMove(): void {
-    this.#loader.classList.remove('hidden');
-    if (this.#currentSelectedCell != null) this.#currentSelectedCell.toggleSelected();
-    this.#currentSelectedCell = null;
+    this._loader.classList.remove('hidden');
+    if (this._selectedCell != null) this._selectedCell.toggleSelected();
+    this._selectedCell = null;
     this.discard();
 
     // Construct the post data - game points and user letters.
@@ -173,18 +168,18 @@ export default class GameBoard {
       userLetters: [] as Array<string|undefined>
     };
 
-    for (let i = 0; i < this.#cells.length; i++) {
-      if (this.#cells[i].letter != null) {
+    for (let i = 0; i < this._gameBoardCells.length; i++) {
+      if (this._gameBoardCells[i].letter != null) {
         postData.gameLetters.push({
-          letter: this.#cells[i].letter?.letter,
+          letter: this._gameBoardCells[i].letter?.letter,
           index: i
         });
       }
     }
 
-    for (let i = 0; i < this.#userLetters.length; i++) {
-      if (this.#userLetters[i].letter != null) {
-        postData.userLetters.push(this.#userLetters[i].letter?.letter);
+    for (let i = 0; i < this._letterRackCells.length; i++) {
+      if (this._letterRackCells[i].letter != null) {
+        postData.userLetters.push(this._letterRackCells[i].letter?.letter);
       }
     }
 
@@ -192,7 +187,7 @@ export default class GameBoard {
     const xhr = new XMLHttpRequest();
     xhr.onreadystatechange = (): void => {
       if (xhr.readyState == 4 && xhr.status == 200) {
-        this.#loader.classList.add('hidden');
+        this._loader.classList.add('hidden');
         const bestMove = JSON.parse(xhr.responseText);
         const word = bestMove['word'];
         const score = bestMove['score'];
@@ -202,13 +197,13 @@ export default class GameBoard {
         
         // Display the word on the board.
         for (let i = 0; i < word.length; i++) {
-          this.#score.innerHTML = score;
+          this._score.innerHTML = score;
 
-          if (!this.#cells[currentIndex].letter) this.#bestMoveRackCells.push(this.#cells[currentIndex]);
-          else this.#bestMovePlayedCells.push(this.#cells[currentIndex]);
+          if (!this._gameBoardCells[currentIndex].letter) this._bestMoveRackCells.push(this._gameBoardCells[currentIndex]);
+          else this._bestMoveCells.push(this._gameBoardCells[currentIndex]);
 
-          this.#cells[currentIndex].toggleBestMove();
-          this.#cells[currentIndex].letter = {
+          this._gameBoardCells[currentIndex].toggleBestMove();
+          this._gameBoardCells[currentIndex].letter = {
             letter: word[word.length - i - 1],
             value: LetterValues[word[word.length - i - 1]]
           };
@@ -227,65 +222,102 @@ export default class GameBoard {
   }
 
   /**
+   * Selects a cell, either a game board cell or a user letter rack cell.
+   * 
+   * @param {HTMLElement} cell the cell to select.
+   */
+  private select(cell: HTMLElement): void {
+    let clickedCell;
+
+    // A gameboard cell was clicked.
+    if (cell.classList.contains('game-board-cell')) {
+      clickedCell = this._gameBoardCells.filter(currentCell => {
+        if (currentCell.cell == cell) return currentCell;
+      })[0];
+    }
+    // A letter rack cell was clicked.
+    else {
+      clickedCell = this._letterRackCells.filter(currentCell => {
+        if (currentCell.cell == cell) return currentCell;
+      })[0];
+    }
+
+    // Clicked cell is the same as the currently selected cell.
+    if (clickedCell == this._selectedCell) {
+      this._selectedCell.toggleSelected();
+      this._selectedCell = null;
+    }
+    // Clicked cell is different than the currently selected cell.
+    else {
+      if (this._selectedCell != null) {
+        this._selectedCell.toggleSelected();
+      }
+      this._selectedCell = clickedCell;
+      this._selectedCell.toggleSelected();
+    }
+  }
+
+  /**
    * Resets the state of the game board.
    */
   clear(): void {
-    if (this.#currentSelectedCell != null) this.#currentSelectedCell.toggleSelected();
-    this.#currentSelectedCell = null;
+    // Clear the selected cell.
+    if (this._selectedCell != null) {
+      this._selectedCell.toggleSelected();
+    }
+    this._selectedCell = null;
 
-    for (let i = 0; i < this.#bestMovePlayedCells.length; i++) {
-      this.#bestMovePlayedCells[i].toggleBestMove();
+    // Clear all letters in the game board.
+    for (let i = 0; i < this._gameBoardCells.length; i++) {
+      this._gameBoardCells[i].letter = null;
     }
 
-    for (let i = 0; i < this.#bestMoveRackCells.length; i++) {
-      this.#bestMoveRackCells[i].toggleBestMove();
+    // Clear all letters in the letter rack.
+    for (let i = 0; i < this._letterRackCells.length; i++) {
+      this._letterRackCells[i].letter = null;
     }
 
-    for (let i = 0; i < this.#cells.length; i++) {
-      this.#cells[i].letter = null;
-    }
-
-    for (let i = 0; i < this.#userLetters.length; i++) {
-      this.#userLetters[i].letter = null;
-    }
-
-    this.#score.innerHTML = '0';
-    this.#bestMovePlayedCells = [];
-    this.#bestMoveRackCells = [];
+    // Remove the best move from the game board.
+    this.discard();
   }
 
   /**
    * Removes the best move from the game board.
    */
   discard(): void {
-    for (let i = 0; i < this.#bestMovePlayedCells.length; i++) {
-      this.#bestMovePlayedCells[i].toggleBestMove();
+    // Clear the best move cells.
+    for (let i = 0; i < this._bestMoveCells.length; i++) {
+      this._bestMoveCells[i].toggleBestMove();
     }
+    this._bestMoveCells = [];
 
-    for (let i = 0; i < this.#bestMoveRackCells.length; i++) {
-      this.#bestMoveRackCells[i].toggleBestMove();
-      this.#bestMoveRackCells[i].letter = null;
+    // Clear the best move rack cells.
+    for (let i = 0; i < this._bestMoveRackCells.length; i++) {
+      this._bestMoveRackCells[i].toggleBestMove();
+      this._bestMoveRackCells[i].letter = null;
     }
+    this._bestMoveRackCells = [];
 
-    this.#bestMovePlayedCells = [];
-    this.#bestMoveRackCells = [];
-    this.#score.innerHTML = '0';
+    // Clear the score board.
+    this._score.innerHTML = '0';
   }
 
   /**
    * Keeps the best move on the game board.
    */
   keep(): void {
-    for (let i = 0; i < this.#bestMovePlayedCells.length; i++) {
-      this.#bestMovePlayedCells[i].toggleBestMove();
+    // Remove the purple boarders from the cells.
+    for (let i = 0; i < this._bestMoveCells.length; i++) {
+      this._bestMoveCells[i].toggleBestMove();
     }
 
-    for (let i = 0; i < this.#bestMoveRackCells.length; i++) {
-      this.#bestMoveRackCells[i].toggleBestMove();
+    for (let i = 0; i < this._bestMoveRackCells.length; i++) {
+      this._bestMoveRackCells[i].toggleBestMove();
     }
 
-    this.#bestMovePlayedCells = [];
-    this.#bestMoveRackCells = [];
-    this.#score.innerHTML = '0';
+    // Clear the best move arrays, and reset the score board.
+    this._bestMoveCells = [];
+    this._bestMoveRackCells = [];
+    this._score.innerHTML = '0';
   }
 }
