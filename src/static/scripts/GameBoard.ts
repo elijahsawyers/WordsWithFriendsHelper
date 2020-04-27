@@ -140,7 +140,7 @@ export default class GameBoard {
       this._selectedCell.letter = null;
       this._selectedCell = null;
     }
-    // If escape is pressed, and a 
+    // If escape is pressed, and a cell is selected, deselect the cell.
     else if (this._selectedCell && e.key == 'Escape') {
       this._selectedCell.toggleSelected();
       this._selectedCell = null;
