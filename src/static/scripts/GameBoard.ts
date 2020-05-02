@@ -56,7 +56,7 @@ export default class GameBoard {
    * Creates a new GameBoardCell object for each cell in the game board,
    * and populates the cells array with these newly created cells.
    */
-  private initializeGameboardCells(): void {
+  initializeGameboardCells(): void {
     const cells = document.getElementsByClassName('game-board-cell');
 
     for (let i = 0; i < cells.length; i++) {
@@ -76,7 +76,7 @@ export default class GameBoard {
    * Creates a new UserCell object for each cell in the user letter dock,
    * and populates the letter dock array with these newly created cells.
    */
-  private initializeLetterRackCells(): void {
+  initializeLetterRackCells(): void {
     const cells = document.getElementsByClassName('user-letter');
 
     for (let i = 0; i < cells.length; i++) {
@@ -89,7 +89,7 @@ export default class GameBoard {
    *
    * @param {MouseEvent} e the mouse event object from the click.
    */
-  private onClick(e: MouseEvent): void {
+  onClick(e: MouseEvent): void {
     // Grab the DOM element that was clicked.
     const target = e.target as HTMLElement;
 
@@ -124,38 +124,63 @@ export default class GameBoard {
    *
    * @param {KeyboardEvent} e the keyboard event object from the keydown.
    */
-  private onKeyDown(e: KeyboardEvent): void {
+  onKeyDown(e: KeyboardEvent): void {
     // If an alpha char is pressed, and a cell is selected, set the letter in the cell.
     if (this._selectedCell && e.key.search(/^[A-Za-z ]$/) != -1) {
-      this._selectedCell.letter = {
-        letter: e.key == ' ' ? '?' : e.key.toUpperCase(),
-        value: LetterValues[e.key == ' ' ? '?' : e.key.toUpperCase()],
-      };
-      this._selectedCell.toggleSelected();
-      this._selectedCell = null;
+      this.setSelectedCellLetter(e.key);
     }
     // If backspace is pressed, and a cell is selected, clear the letter in the cell.
     else if (this._selectedCell && e.key == 'Backspace') {
-      this._selectedCell.toggleSelected();
-      this._selectedCell.letter = null;
-      this._selectedCell = null;
+      this.setSelectedCellLetter(null);
     }
     // If escape is pressed, and a cell is selected, deselect the cell.
     else if (this._selectedCell && e.key == 'Escape') {
+      this.deselectSelectedCell();
+    }
+  }
+
+  /** */
+  setSelectedCellLetter(letter: string|null): void {
+    // Set the letter in the selected cell.
+    if (letter) {
+      this._selectedCell.letter = {
+        letter: letter == ' ' ? '?' : letter.toUpperCase(),
+        value: LetterValues[letter == ' ' ? '?' : letter.toUpperCase()],
+      };
+    }
+    // Remove the letter in the selected cell.
+    else {
+      this._selectedCell.letter = null;
+    }
+    this.deselectSelectedCell();
+  }
+
+  /** */
+  deselectSelectedCell(): void {
+    if (this._selectedCell) {
       this._selectedCell.toggleSelected();
       this._selectedCell = null;
     }
+  }
+
+  /** */
+  showSpinner(): void {
+    this._loader.classList.remove('hidden');
+  }
+
+  /** */
+  hideSpinner(): void {
+    this._loader.classList.add('hidden');
   }
 
   /**
    * Computes the best possible move, given the game board and user's letter,
    * and displays the result on the gameboard with letters with a purple border.
    */
-  private computeBestMove(): void {
-    this._loader.classList.remove('hidden');
-    if (this._selectedCell != null) this._selectedCell.toggleSelected();
-    this._selectedCell = null;
+  computeBestMove(): void {
     this.discard();
+    this.showSpinner();
+    this.deselectSelectedCell();
 
     // Construct the post data - game points and user letters.
     interface GameLetter {
@@ -226,7 +251,7 @@ export default class GameBoard {
    * 
    * @param {HTMLElement} cell the cell to select.
    */
-  private select(cell: HTMLElement): void {
+  select(cell: HTMLElement): void {
     let clickedCell;
 
     // A gameboard cell was clicked.
