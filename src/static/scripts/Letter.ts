@@ -38,7 +38,7 @@ export const LetterValues: LetterValueObject = {
   '?': 0,
 };
 
-/** Represents a letter in a game board cell. */
+/** Represents a letter in the game board or the user's letter rack. */
 export interface Letter {
   letter: string;
   value: number;
