@@ -2,8 +2,15 @@
  * @author Elijah Sawyers <elijahsawyers@gmail.com>
  */
 
+import computeBestMove, {BestMoveData, MoveDirection} from './BestMove';
 import {CellType, Cell, UserCell, GameBoardCell} from './Cell';
 import {LetterValues} from './Letter';
+
+/** Represents the game data to be posted to the backend service. */
+export interface PostData {
+  gameLetters: Array<object>;
+  userLetters: Array<string|undefined>;
+}
 
 /** Represents the game board. */
 export default class GameBoard {
@@ -17,16 +24,16 @@ export default class GameBoard {
   _loader: HTMLElement;
 
   // The game board cells.
-  _gameBoardCells: Array<Cell>;
+  _gameBoardCells: Array<GameBoardCell>;
+
+  // The user's letter rack cells.
+  _letterRackCells: Array<UserCell>;
 
   // The cells that are a part of the best possible game move.
   _bestMoveCells: Array<Cell>;
 
   // The cells that are a part of the best possible game move, from the user's rack.
   _bestMoveRackCells: Array<Cell>;
-
-  // The user's letter rack cells.
-  _letterRackCells: Array<Cell>;
 
   // The cell that is currently selected by the user, or null, if a cell isn't selected.
   _selectedCell: Cell|null;
@@ -68,7 +75,7 @@ export default class GameBoard {
       if (cells[i].classList.contains('double-word')) cellType = CellType.doubleWord;
       if (cells[i].classList.contains('triple-word')) cellType = CellType.tripleWord;
 
-      this._gameBoardCells.push(new GameBoardCell(cells[i] as HTMLElement, cellType));
+      this._gameBoardCells.push(new GameBoardCell(cells[i] as HTMLElement, cellType, i));
     }
   }
 
@@ -139,111 +146,92 @@ export default class GameBoard {
     }
   }
 
-  /** */
-  setSelectedCellLetter(letter: string|null): void {
-    // Set the letter in the selected cell.
-    if (letter) {
-      this._selectedCell.letter = {
-        letter: letter == ' ' ? '?' : letter.toUpperCase(),
-        value: LetterValues[letter == ' ' ? '?' : letter.toUpperCase()],
-      };
-    }
-    // Remove the letter in the selected cell.
-    else {
-      this._selectedCell.letter = null;
-    }
-    this.deselectSelectedCell();
-  }
-
-  /** */
-  deselectSelectedCell(): void {
-    if (this._selectedCell) {
-      this._selectedCell.toggleSelected();
-      this._selectedCell = null;
-    }
-  }
-
-  /** */
-  showSpinner(): void {
-    this._loader.classList.remove('hidden');
-  }
-
-  /** */
-  hideSpinner(): void {
-    this._loader.classList.add('hidden');
-  }
-
   /**
    * Computes the best possible move, given the game board and user's letter,
-   * and displays the result on the gameboard with letters with a purple border.
+   * and displays it on the gameboard.
    */
   computeBestMove(): void {
     this.discard();
     this.showSpinner();
     this.deselectSelectedCell();
 
-    // Construct the post data - game points and user letters.
-    interface GameLetter {
-      letter: string|undefined;
-      index: number;
+    const postData = this.buildPostData();
+    computeBestMove(postData).then((bestMove: BestMoveData) => {
+      this.displayBestMove(bestMove);
+      this.hideSpinner();
+    }).catch(() => {
+      this.hideSpinner();
+    });
+  }
+
+  /**
+   * Given the best game move data, display it on the board with purple
+   * boardered letters.
+   * 
+   * @param {BestMoveData} bestMove the best move data to display on the board.
+   */
+  displayBestMove(bestMove: BestMoveData): void {
+    let currentIndex =
+      bestMove.lastLetterIndex[0] * 15 + bestMove.lastLetterIndex[1];
+
+    for (let i = 0; i < bestMove.word.length; i++) {
+      // Set the score board.
+      this._score.innerHTML = String(bestMove.score);
+
+      // Keep up with whether the letter is a rack or game board letter.
+      if (!this._gameBoardCells[currentIndex].letter)
+        this._bestMoveRackCells.push(this._gameBoardCells[currentIndex]);
+      else
+        this._bestMoveCells.push(this._gameBoardCells[currentIndex]);
+
+      // Toggle the purple border, and set the letter in the game board cell.
+      this._gameBoardCells[currentIndex].toggleBestMove();
+      this._gameBoardCells[currentIndex].letter = {
+        letter: bestMove.word[bestMove.word.length - i - 1],
+        value: LetterValues[bestMove.word[bestMove.word.length - i - 1]]
+      };
+
+      // Update the current index, which varies based on move direction.
+      if (bestMove.direction == MoveDirection.across) {
+        currentIndex -= 1;
+      } else {
+        currentIndex -= this.dimensions;
+      }
+    }
+  }
+
+  /**
+   * Builds the post data needed for the backend service to compute the best
+   * possible game move.
+   * 
+   * @return the post data for the backend service.
+   */
+  buildPostData(): PostData {
+    const postData: PostData = {
+      gameLetters: [],
+      userLetters: []
     }
 
-    const postData = {
-      gameLetters: [] as Array<GameLetter>,
-      userLetters: [] as Array<string|undefined>
-    };
-
+    // Grab the game board letters.
     for (let i = 0; i < this._gameBoardCells.length; i++) {
       if (this._gameBoardCells[i].letter != null) {
         postData.gameLetters.push({
           letter: this._gameBoardCells[i].letter?.letter,
-          index: i
+          index: this._gameBoardCells[i].index
         });
       }
     }
 
+    // Grab the user letters.
     for (let i = 0; i < this._letterRackCells.length; i++) {
       if (this._letterRackCells[i].letter != null) {
-        postData.userLetters.push(this._letterRackCells[i].letter?.letter);
+        postData.userLetters.push(
+          this._letterRackCells[i].letter?.letter
+        );
       }
     }
 
-    // Make an xhr request to get the best possible game move.
-    const xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = (): void => {
-      if (xhr.readyState == 4 && xhr.status == 200) {
-        this._loader.classList.add('hidden');
-        const bestMove = JSON.parse(xhr.responseText);
-        const word = bestMove['word'];
-        const score = bestMove['score'];
-        const direction = bestMove['direction'];
-        let currentIndex =
-          bestMove['last_letter_index'][0] * 15 + bestMove['last_letter_index'][1];
-        
-        // Display the word on the board.
-        for (let i = 0; i < word.length; i++) {
-          this._score.innerHTML = score;
-
-          if (!this._gameBoardCells[currentIndex].letter) this._bestMoveRackCells.push(this._gameBoardCells[currentIndex]);
-          else this._bestMoveCells.push(this._gameBoardCells[currentIndex]);
-
-          this._gameBoardCells[currentIndex].toggleBestMove();
-          this._gameBoardCells[currentIndex].letter = {
-            letter: word[word.length - i - 1],
-            value: LetterValues[word[word.length - i - 1]]
-          };
-
-          if (direction == 'across') {
-            currentIndex -= 1;
-          } else {
-            currentIndex -= this.dimensions;
-          }
-        }
-      }
-    }
-    xhr.open('POST', '/bestGameMove');
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(JSON.stringify(postData));
+    return postData;
   }
 
   /**
@@ -269,8 +257,7 @@ export default class GameBoard {
 
     // Clicked cell is the same as the currently selected cell.
     if (clickedCell == this._selectedCell) {
-      this._selectedCell.toggleSelected();
-      this._selectedCell = null;
+      this.deselectSelectedCell();
     }
     // Clicked cell is different than the currently selected cell.
     else {
@@ -287,10 +274,7 @@ export default class GameBoard {
    */
   clear(): void {
     // Clear the selected cell.
-    if (this._selectedCell != null) {
-      this._selectedCell.toggleSelected();
-    }
-    this._selectedCell = null;
+    this.setSelectedCellLetter(null);
 
     // Clear all letters in the game board.
     for (let i = 0; i < this._gameBoardCells.length; i++) {
@@ -344,5 +328,50 @@ export default class GameBoard {
     this._bestMoveCells = [];
     this._bestMoveRackCells = [];
     this._score.innerHTML = '0';
+  }
+
+  /**
+   * Show the spinner on the "Go" button, which indicates loading
+   * the best game move.
+   */
+  showSpinner(): void {
+    this._loader.classList.remove('hidden');
+  }
+
+  /**
+   * Hide the spinner on the "Go" button.
+   */
+  hideSpinner(): void {
+    this._loader.classList.add('hidden');
+  }
+
+  /**
+   * Set the selected cell's letter, or clear it, if null is passed as the
+   * letter value.
+   * 
+   * @param {string|null} letter the letter value to set in the selected cell.
+   */
+  setSelectedCellLetter(letter: string|null): void {
+    // Set the letter in the selected cell.
+    if (this._selectedCell) {
+      this._selectedCell.letter =
+        (letter == null) ?
+          null :
+          {
+            letter: letter == ' ' ? '?' : letter.toUpperCase(),
+            value: LetterValues[letter == ' ' ? '?' : letter.toUpperCase()]
+          };
+      this.deselectSelectedCell();
+    }
+  }
+
+  /**
+   * Deselect the selected cell, which removes the red border.
+   */
+  deselectSelectedCell(): void {
+    if (this._selectedCell) {
+      this._selectedCell.toggleSelected();
+      this._selectedCell = null;
+    }
   }
 }

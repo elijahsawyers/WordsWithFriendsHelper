@@ -95,22 +95,28 @@ export class GameBoardCell extends Cell {
   // The cell type (i.e. bonus cell, middle cell, etc.).
   _cellType: CellType;
 
+  // The index on the game board.
+  _index: number;
+
   /**
    * Construct a new cell with the HTMLElement of the cell and a letter, as well
    * as a cell type.
    *
    * @param {HTMLElement} cell the HTML element in the DOM that represents the cell.
    * @param {CellType} cellType the cell type (i.e. bonus cell, middle cell, etc.).
+   * @param {number} index the index on the gameboard (0-254).
    * @param {Letter|null} letter the letter the cell holds, or null, if it doesn't hold
    * a letter.
    */
   constructor(
     cell: HTMLElement,
     cellType: CellType,
+    index: number,
     letter: Letter|null = null,
   ) {
     super(cell, letter);
     this._cellType = cellType;
+    this._index = index;
   }
 
   /** Must override the getter if the setter is overridden, per the spec. */
@@ -149,6 +155,16 @@ export class GameBoardCell extends Cell {
   /** Setter for the cell type. */
   set cellType(newCellType: CellType|null) {
     throw Error('Cannot change the cell type!');
+  }
+
+  /** Getter for the cell index. */
+  get index(): number {
+    return this._index;
+  }
+
+  /** Setter for the cell index. */
+  set index(newIndex: number) {
+    throw Error('Cannot change the cell index!');
   }
 }
 
