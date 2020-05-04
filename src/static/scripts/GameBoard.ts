@@ -176,7 +176,7 @@ export default class GameBoard {
 
     for (let i = 0; i < bestMove.word.length; i++) {
       // Set the score board.
-      this._score.innerHTML = String(bestMove.score);
+      this.setScore(bestMove.score);
 
       // Keep up with whether the letter is a rack or game board letter.
       if (!this._gameBoardCells[currentIndex].letter)
@@ -308,7 +308,7 @@ export default class GameBoard {
     this._bestMoveRackCells = [];
 
     // Clear the score board.
-    this._score.innerHTML = '0';
+    this.setScore(null);
   }
 
   /**
@@ -327,7 +327,21 @@ export default class GameBoard {
     // Clear the best move arrays, and reset the score board.
     this._bestMoveCells = [];
     this._bestMoveRackCells = [];
-    this._score.innerHTML = '0';
+    this.setScore(null);
+  }
+
+  /**
+   * Sets a score in the scoreboard, or sets it to "00", if null
+   * is passed in.
+   *
+   * @param {number|null} score the score to display on the scoreboard.
+   */
+  setScore(score: number|null): void {
+    if (score) {
+      this._score.innerHTML = String(score);
+    } else {
+      this._score.innerHTML = '00';
+    }
   }
 
   /**

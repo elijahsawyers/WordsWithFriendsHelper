@@ -5,8 +5,6 @@ Date: 03/27/2020
 Reference: Loosely based on https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf
 '''
 
-from itertools import permutations
-
 from dictionary import load_words
 
 DICTIONARY = load_words()
@@ -97,6 +95,7 @@ def compute_across_cross_checks(game_board):
     Parameter {Array<Array<str>>} game_board the game board letter matrix.
     Returns {Array<Array<str>>} the cross check letter matrix.
     '''
+
     cross_checks = []
 
     # Iterate over the rows.
@@ -155,6 +154,7 @@ def compute_down_cross_checks(game_board):
     Parameter {Array<Array<str>>} game_board the game board letter matrix.
     Returns {Array<Array<str>>} the cross check letter matrix.
     '''
+
     cross_checks = []
 
     # Iterate over the columns.
@@ -797,7 +797,7 @@ def compute(json_data):
         else:
             pass
 
-    # Compute best across word.
+    # Compute best down word.
     for i in range(15):
         for j in range(15):
             if anchors[i][j]:
