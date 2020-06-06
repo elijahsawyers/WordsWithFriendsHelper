@@ -3,6 +3,7 @@
 </p>
 
 # Words With Friends Helper!
+
 > Input your current game board, and letters, and this tool will provide you with the best possible move!
 
 Tired of losing at Words with Friends? Me too! This tool will allow you to finally beat your opponents in Words with Friends!
@@ -17,6 +18,7 @@ Tired of losing at Words with Friends? Me too! This tool will allow you to final
 * [Authors](#Authors)
 
 ## Getting started
+
 Clone the repository, and change your cwd.
 
 ```sh
@@ -47,6 +49,7 @@ gulp
 You now have a distribution folder built, and you're ready to run the application!
 
 ## Running the app
+
 To run the app, simply run the Flask application.
 
 ```sh
@@ -55,7 +58,8 @@ python dist/app.py
 
 Now visit your localhost in the browser of your choice!
 
-## Demo 
+## Demo
+
 Checkout the demo below!
 
 <p align="center">
@@ -67,4 +71,5 @@ Checkout the demo below!
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Authors
+
 * [Elijah Sawyers](https://github.com/elijahsawyers)
