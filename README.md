@@ -72,4 +72,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Authors
 
-* [Elijah Sawyers](https://github.com/elijahsawyers)
+* [Elijah Sawyers](https://github.com/elijahsawyers/)
