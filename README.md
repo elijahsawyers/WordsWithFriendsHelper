@@ -8,7 +8,7 @@
 
 Tired of losing at Words with Friends? Me too! This tool will allow you to finally beat your opponents in Words with Friends!
 
-## Table of Contents
+## Table of contents
 
 * [Getting&nbsp;started](#Getting-started)
 * [Setup](#Setup)
